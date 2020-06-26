@@ -14,45 +14,134 @@ parts_filepath = os.path.join(Path.home(), ".openpnp2", "parts.xml")
 packages_filepath = os.path.join(Path.home(), ".openpnp2", "packages.xml")
 
 
+class OpenPnPParts():
+  def __init__(self):
+    with open(parts_filepath, "rb") as parts_file:
+      parts_filedata = parts_file.read()
+  
+    with open(packages_filepath, "rb") as packages_file:
+      packages_filedata = packages_file.read()
+      
+    self.parts = xmltodict.parse(parts_filedata)
+    self.packages = xmltodict.parse(packages_filedata)
+    
+    self.packages = self.packages["openpnp-packages"]["package"]
+    self.parts = self.parts["openpnp-parts"]["part"]
+    
+    print(self.parts)
+    print(self.packages)
+    
+    part_id_dict = {}
+    for part in self.parts :
+      part_id = part["@id"]
+      part_id_dict[part_id] = part
+    self.part_id_dict = part_id_dict
+      
+    package_id_dict = {}
+    for package in self.packages:
+      package_id_dict[package["@id"]] = package
+    self.package_id_dict = package_id_dict
+    
+
+class Aliases():
+  def __init__(self, alias_filepath):
+    #Read and parse alias file
+    with open(alias_filepath, "r") as alias_file:
+      alias_lines = alias_file.readlines()
+    
+    aliases = {}
+    for alias_line in alias_lines:
+      alias_splits = alias_line.split(",")
+      original = str(alias_splits[0])
+      alias = str(alias_splits[1][:-1])
+      aliases[original] = alias
+          
+    self.aliases = aliases
+    
+    
+
+class PartPositions():
+  def __init__(self, pos_file_path):
+    #Read and parse board csv file
+    with open(pos_file_path, "r") as board_pos_file:
+      board_pos_lines = board_pos_file.readlines()
+          
+    part_positions = []
+    headers = board_pos_lines[0].split(",")
+    for board_pos_line in board_pos_lines[1:]:
+      component_position = {}
+      component_vals = board_pos_line.split(",")
+      for header, component_val in zip(headers,  component_vals):
+        component_position[header] = component_val.replace('"', '')
+      part_positions.append(component_position)
+
+    self.headers = headers
+    self.part_positions = part_positions
+    
+  def subPartAlias(self, part_aliases):
+    partnumber_aliases = part_aliases.aliases
+    
+    #Change part numbers into aliases
+    for comp_pos in self.part_positions:
+      search_val = str(comp_pos["Val"])
+      if search_val in partnumber_aliases.keys():
+        new_partno = partnumber_aliases[search_val]
+        print("Ref:", comp_pos["Ref"], " Val:", comp_pos["Val"], "changed to: ", new_partno)
+        comp_pos["Val"] = new_partno
+      else:
+        print("Failed to find component:", search_val, " in part alias file")
+        keys = list(partnumber_aliases)
+        print(keys)
+        return    
+    
+#   def setPackagesToAvailableParts(self):
+#     #Modify packages
+#     for comp_pos in self.part_positions:
+#       component_val = comp_pos["Val"]
+#       part = part_id_dict[component_val]
+#       package_id = part["@package-id"]
+#       comp_pos["Package"] = package_id
+
+  def setPackagesToAliases(self, package_aliases):
+    package_aliases = package_aliases.aliases
+    
+    #Change part numbers into aliases
+    for part_pos in self.part_positions:
+      search_package = str(part_pos["Package"])
+      if search_package in package_aliases.keys():
+        new_package = package_aliases[search_package]
+        print("Ref:", part_pos["Ref"], " Val:", part_pos["Val"], " Package:", search_package , " changed package to: ", new_package)
+        part_pos["Package"] = new_package
+      else:
+        print("No alias for package", search_package, " for part:" , part_pos["Ref"])
+    
+  def exportToCSV(self, new_pos_file_path):
+    with open(new_pos_file_path, "w") as new_pos_fle:
+      #write headers
+      for header in self.headers[:-1]:
+        new_pos_fle.write(header)
+        new_pos_fle.write(",")
+      new_pos_fle.write(self.headers[-1])
+      
+      #Write data
+      for comp_pos in self.part_positions:
+        for hdr_idx, header in enumerate(self.headers[:-1]):
+          #capture the quotes around the first three fields
+          if hdr_idx < 3:
+            valstr = '"%s",' % (comp_pos[header])
+          else:
+            valstr = '%s,' % (comp_pos[header])
+          new_pos_fle.write(valstr)
+        new_pos_fle.write(comp_pos[self.headers[-1]])    
+    
+    
 def main():
   config = configparser.ConfigParser()
   
   default_filepath = os.path.join(Path.home(), "Dropbox", "KiCAD", "pcb.csv")
   config['DEFAULT'] = {"filepath": default_filepath}
   
-  config.read("config.ini")
-  
-  with open(parts_filepath, "rb") as parts_file:
-    parts_filedata = parts_file.read()
-
-  with open(packages_filepath, "rb") as packages_file:
-    packages_filedata = packages_file.read()
-    
-  parts = xmltodict.parse(parts_filedata)
-  packages = xmltodict.parse(packages_filedata)
-  
-  packages = packages["openpnp-packages"]["package"]
-  parts = parts["openpnp-parts"]["part"]
-  
-  print(parts)
-  print(packages)
-  
-  part_id_dict = {}
-  
-  for part in parts:
-    part_id = part["@id"]
-    part_id_dict[part_id] = part
-    
-  package_id_dict = {}
-  
-  for package in packages:
-    package_id_dict[package["@id"]] = package
-
-#   #Add pacakge object to part dictionary   
-#   for part in parts:
-#     part_package_id = part["@package-id"]
-#     part_package = package_id_dict[part_package_id]
-#     part["package_obj"] = part_package
+  config.read("config.ini")  
 
   pos_file_path = Path(config['DEFAULT']["filepath"])
   posfile_directory = pos_file_path.parent
@@ -75,91 +164,34 @@ def main():
   config['DEFAULT']["filepath"] = pos_file_path
 
   pos_file_path = Path(pos_file_path)
+  
+  part_positions = PartPositions(pos_file_path)
+
+  openpnp_parts = OpenPnPParts()
+  
 
   with open('config.ini', 'w') as configfile:
     config.write(configfile)
 #       
-  alias_filepath = Path(pos_file_path)
-  alias_filepath = alias_filepath.with_name("openpnp_partname_alias.csv")
-   
-  #Read and parse board csv file
-  with open(pos_file_path, "r") as board_pos_file:
-    board_pos_lines = board_pos_file.readlines()
+  part_alias_filepath = Path(pos_file_path)
+  part_alias_filepath = part_alias_filepath.with_name("openpnp_partname_alias.csv")
+  part_alises = Aliases(part_alias_filepath)
+
+  package_alias_filepath = Path(pos_file_path)
+  package_alias_filepath = package_alias_filepath.with_name("openpnp_package_alias.csv")
+  package_alises = Aliases(package_alias_filepath)
+
+  part_positions.setPackagesToAliases(package_alises)
   
-  component_positions = []
-  headers = board_pos_lines[0].split(",")
-  for board_pos_line in board_pos_lines[1:]:
-    component_position = {}
-    component_vals = board_pos_line.split(",")
-    for header, component_val in zip(headers,  component_vals):
-      component_position[header] = component_val.replace('"', '')
-    component_positions.append(component_position)
-
-
-  #Read and parse alias file
-  with open(alias_filepath, "r") as alias_file:
-    alias_lines = alias_file.readlines()
-  
-  partnumber_aliases = {}
-  for alias_line in alias_lines:
-    alias_splits = alias_line.split(",")
-    partno = str(alias_splits[0])
-    alias = str(alias_splits[1][:-1])
-    partnumber_aliases[partno] = alias
-    
-  print(partnumber_aliases)
-        
-  #Change part numbers into aliases
-  for comp_pos in component_positions:
-    search_val = str(comp_pos["Val"])
-    if search_val in partnumber_aliases.keys():
-      new_partno = partnumber_aliases[search_val]
-      print("Ref:", comp_pos["Ref"], " Val:", comp_pos["Val"], "changed to: ", new_partno)
-      comp_pos["Val"] = new_partno
-    else:
-      print("Failed to find component:", search_val, " in part alias file")
-      keys = list(partnumber_aliases)
-      print(keys)
-      return
-    
-  #Modify packages
-  for comp_pos in component_positions:
-    component_val = comp_pos["Val"]
-    part = part_id_dict[component_val]
-    package_id = part["@package-id"]
-    comp_pos["Package"] = package_id
-
   #Export new csv file
   pos_file_path_stem = pos_file_path.stem
   new_pos_file_path_name = pos_file_path_stem + "_openpnp.csv"
   new_pos_file_path = Path(pos_file_path)
   new_pos_file_path = new_pos_file_path.with_name(new_pos_file_path_name)
-  
+  part_positions.exportToCSV(new_pos_file_path)
   print("new_pos_file_path:", new_pos_file_path)
   
   
-  with open(new_pos_file_path, "w") as new_pos_fle:
-    #write headers
-    for header in headers[:-1]:
-      if header != "Package":
-        new_pos_fle.write(header)
-        new_pos_fle.write(",")
-    new_pos_fle.write(headers[-1])
-    
-    #Write data
-    for comp_pos in component_positions:
-      for hdr_idx, header in enumerate(headers[:-1]):
-        if header != "Package":
-          if hdr_idx < 3:
-            valstr = '"%s",' % (comp_pos[header])
-          else:
-            valstr = '%s,' % (comp_pos[header])
-          new_pos_fle.write(valstr)
-      new_pos_fle.write(comp_pos[headers[-1]])
-    
- 
-  print(part_id_dict)
-  print(package_id_dict)
 
 if __name__ == '__main__':
     main()
