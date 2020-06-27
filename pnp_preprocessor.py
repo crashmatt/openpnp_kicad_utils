@@ -4,44 +4,14 @@ Created on Jun 23, 2020
 @author: matt
 '''
 
-import xmltodict
 import os
 from pathlib import Path
 from tkinter import filedialog
 import configparser
 
-parts_filepath = os.path.join(Path.home(), ".openpnp2", "parts.xml")
-packages_filepath = os.path.join(Path.home(), ".openpnp2", "packages.xml")
+from OpenPnPParts import *
 
 
-class OpenPnPParts():
-  def __init__(self):
-    with open(parts_filepath, "rb") as parts_file:
-      parts_filedata = parts_file.read()
-  
-    with open(packages_filepath, "rb") as packages_file:
-      packages_filedata = packages_file.read()
-      
-    self.parts = xmltodict.parse(parts_filedata)
-    self.packages = xmltodict.parse(packages_filedata)
-    
-    self.packages = self.packages["openpnp-packages"]["package"]
-    self.parts = self.parts["openpnp-parts"]["part"]
-    
-    print(self.parts)
-    print(self.packages)
-    
-    part_id_dict = {}
-    for part in self.parts :
-      part_id = part["@id"]
-      part_id_dict[part_id] = part
-    self.part_id_dict = part_id_dict
-      
-    package_id_dict = {}
-    for package in self.packages:
-      package_id_dict[package["@id"]] = package
-    self.package_id_dict = package_id_dict
-    
 
 class Aliases():
   def __init__(self, alias_filepath):
@@ -132,7 +102,7 @@ class PartPositions():
           else:
             valstr = '%s,' % (comp_pos[header])
           new_pos_fle.write(valstr)
-        new_pos_fle.write(comp_pos[self.headers[-1]])    
+        new_pos_fle.write(comp_pos[self.headers[-1]])
     
     
 def main():
@@ -149,7 +119,7 @@ def main():
 
   pos_file_path = filedialog.askopenfilename(filetypes=[("KiCAD position file", ".csv")] , initialdir=posfile_directory, initialfile=posfile_name)
   
-  if pos_file_path == "":
+  if not pos_file_path:
     return;
 
   if "alias" in pos_file_path:
