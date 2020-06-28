@@ -67,6 +67,9 @@ class OpenPnPPackagesXML():
   def __init__(self, packages_filepath=packages_filepath_default ):
     self.packages_tree = etree.parse(str(packages_filepath))
     
+    header_element = self.packages_tree.xpath("/openpnp-packages")
+    if len(header_element) == 0:
+      print("openpnp xml does not contain expected header")
 
   def exportPackages(self, export_path):
     xml = etree.tostring(self.packages_tree, pretty_print=True)
@@ -81,44 +84,38 @@ class OpenPnPPackagesXML():
       if kicad_package_id in package_alias:
         kicad_package_id = package_alias[kicad_package_id]
         print("Changed package id to alias:" , kicad_package_id)
+        
     
-    kicad_package_xpath = "/openpnp-packages/package/%s" % kicad_package_id
-    package_element = self.packages_tree.xpath(kicad_package_xpath)
-    
-    if package_element is None:
-      print("kicad package not found")
-      return False
-    
-    print("kicad package found")
-    
-    
-#     for package_element in self.packages_tree.iter("package"):
-#       package_element_id = package_element.get("id")
-#       if package_element_id == kicad_package_id:
-#         print("Found package element: ", package_element_id)
-#         if package_element 
-    
-#     if package_id not in self.packages:
-#       print("kicad module name not in openpnp packages")
-#       return False
-#      
-#     package = self.packages[package_id]
-#  
-# #     if "pad" in package["footprint"]:
-# #       if overwrite == False:
-# #         return False
-#  
-#     if "pad" in package["footprint"]:
-#       print("No overwriting existing openpnp part pads")
-#        
-#     for kicad_pad in kicad_mod.pads:
-#       openpnp_pad = {}
-#       openpnp_pad["name"] = kicad_pad["number"]
-#       openpnp_pad["x"] = kicad_pad["pos"]["x"]
-#       openpnp_pad["y"] = kicad_pad["pos"]["y"]
-#       openpnp_pad["rotation"] = kicad_pad["pos"]["orientation"]
-       
+    for package_element in self.packages_tree.iter("package"):
+      package_element_id = package_element.get("id")
+      if package_element_id == kicad_package_id:
+        print("Found package element: ", package_element_id)
+           
+        pad_elements = package_element.xpath("./footprint/pad")
+        if len(pad_elements) > 0:
+          print("openpnp package has pas definition already.  Will not overwrite.  Do manual pad definition removal")
+          return False
+
+        print("openpnp package %s has no previous pad definition" % kicad_package_id)
  
+#         footprint_element = package_element.xpath("./footprint")
+        footprint_element = package_element.find("footprint")
+    
+        for kicad_pad in kicad_mod.pads:
+          pad_attribs =  {}
+          pad_attribs["name"] = str(kicad_pad["number"])
+          pad_attribs["x"] = str(kicad_pad["pos"]["x"])
+          pad_attribs["y"] = str(kicad_pad["pos"]["y"])
+          pad_attribs["width"] = str(kicad_pad["size"]["x"])
+          pad_attribs["height"] = str(kicad_pad["size"]["y"])
+          pad_attribs["rotation"] = str(kicad_pad["pos"]["orientation"])
+          pad_attribs["roundness"] = str(0.0)
+          pad_element = etree.SubElement(footprint_element, "pad", pad_attribs)
+#           pad_attribs = pad_element.attrib
+#           pad_attribs["name"] = kicad_pad["number"]
+#           pad_attribs["x"] = kicad_pad["pos"]["x"]
+#           pad_attribs["y"] = kicad_pad["pos"]["y"]
+#           pad_attribs["rotation"] = kicad_pad["pos"]["orientation"]
        
   def __check_pt_extents(self, x, y):
     if x > self.kicadmod_max_x:
