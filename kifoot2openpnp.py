@@ -44,11 +44,13 @@ def main():
     config = configparser.ConfigParser()
     
     default_directory = os.getcwd()
-    config['DEFAULT'] = {"directory": default_directory}
+    config['DEFAULT'] = {"kicad_mod_directory": default_directory}
+    config['DEFAULT']["package_alias_file"] = os.path.join(os.getcwd(), "openpnp_package_alias.csv")
     
     config.read("config.ini")    
     
-    initial_directory = config['DEFAULT']["directory"]
+    initial_directory = config['DEFAULT']["kicad_mod_directory"]
+    package_alias_file = config['DEFAULT']["package_alias_file"]
 
     kicadmod_file_path = filedialog.askopenfilename(filetypes=[("KiCAD mod file", ".kicad_mod")], initialdir=initial_directory)
 
@@ -58,16 +60,18 @@ def main():
     kicadmod_file_path = Path(kicadmod_file_path)
     new_directory = kicadmod_file_path.parent
     
-    config['DEFAULT']["directory"] = str(new_directory)
+    config['DEFAULT']["kicad_mod_directory"] = str(new_directory)
     
     with open('config.ini', 'w') as configfile:
       config.write(configfile)
       
     kicadmod = KicadMod(kicadmod_file_path)
-        
-    packages = OpenPnPPackages()
     
-#     packages.insertKiCadMod(kicadmod)
+    package_aliases = Aliases(package_alias_file).aliases
+        
+    packages = OpenPnPPackagesXML()
+    
+    packages.insertKiCadModPads(kicadmod, package_alias=package_aliases)
     
     export_packages_path = Path(packages_filepath_default)
     export_packages_path = export_packages_path.with_name("kicad_export_packages.xml")

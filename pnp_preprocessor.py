@@ -12,24 +12,6 @@ import configparser
 from OpenPnPParts import *
 
 
-
-class Aliases():
-  def __init__(self, alias_filepath):
-    #Read and parse alias file
-    with open(alias_filepath, "r") as alias_file:
-      alias_lines = alias_file.readlines()
-    
-    aliases = {}
-    for alias_line in alias_lines:
-      alias_splits = alias_line.split(",")
-      original = str(alias_splits[0])
-      alias = str(alias_splits[1][:-1])
-      aliases[original] = alias
-          
-    self.aliases = aliases
-    
-    
-
 class PartPositions():
   def __init__(self, pos_file_path):
     #Read and parse board csv file
