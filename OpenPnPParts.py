@@ -117,7 +117,7 @@ class OpenPnPPackagesXML():
           if extents_layer == ""  or kicad_line["layer"] == extents_layer:
             new_pt = np.array([[kicad_line["start"]["x"], kicad_line["start"]["y"]],]) 
             line_pts = np.append(line_pts, new_pt, axis = 0)
-            new_pt = np.array([[kicad_line["end"]["x"], kicad_line["end"]["y"]],]) 
+            new_pt = np.array([[kicad_line["end"]["x"], kicad_line["end"]["y"]],])
             line_pts = np.append(line_pts, new_pt, axis = 0)
             
         if line_pts.shape[0] > 4:
@@ -131,6 +131,14 @@ class OpenPnPPackagesXML():
           print("max_x:", max_x)
           print("min_y:", min_y)
           print("max_y:", max_y)
+          
+          body_width = max_x - min_x
+          body_height = max_y - min_y
+          
+          footprint_atttribs = footprint_element.attrib
+          footprint_atttribs["body-width"] = str(body_width)
+          footprint_atttribs["body-height"] = str(body_height)
+          print(footprint_atttribs)
         
         else:
           print("Not enough line information, can't set package extents")
