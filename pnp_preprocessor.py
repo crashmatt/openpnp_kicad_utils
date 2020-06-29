@@ -20,10 +20,11 @@ class PartPositions():
       board_pos_lines = board_pos_file.readlines()
           
     part_positions = []
-    headers = board_pos_lines[0].split(",")
+    header_line = board_pos_lines[0].rstrip()    #pick header and remove newline
+    headers = header_line.split(",")
     for board_pos_line in board_pos_lines[1:]:
       component_position = {}
-      component_vals = board_pos_line.split(",")
+      component_vals = board_pos_line.rstrip().split(",")   #remove newline and split
       for header, component_val in zip(headers,  component_vals):
         component_position[header] = component_val.replace('"', '')
       part_positions.append(component_position)
@@ -80,9 +81,9 @@ class PartPositions():
       
   def flipBottomToTop(self):
     for part_pos in self.part_positions:
-      if part_pos["Side\n"] == "bottom\n":
+      if part_pos["Side"] == "bottom\n":
         part_pos["PosX"] = str(-float(part_pos["PosX"]))
-        part_pos["Side\n"] = "top\n"
+        part_pos["Side"] = "top"
       
   def zeroPositionOffset(self):
     positions = np.empty([0,2])
@@ -105,6 +106,7 @@ class PartPositions():
         new_pos_fle.write(header)
         new_pos_fle.write(",")
       new_pos_fle.write(self.headers[-1])
+      new_pos_fle.write("\n")
       
       #Write data
       for comp_pos in self.part_positions:
@@ -116,6 +118,8 @@ class PartPositions():
             valstr = '%s,' % (comp_pos[header])
           new_pos_fle.write(valstr)
         new_pos_fle.write(comp_pos[self.headers[-1]])
+        new_pos_fle.write("\n")
+
     
     
 def main():
