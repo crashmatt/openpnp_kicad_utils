@@ -8,7 +8,7 @@ import xmltodict
 from pathlib import Path
 import os
 from lxml import etree
-
+import numpy as np
 
 parts_filepath_default = Path(os.path.join(Path.home(), ".openpnp2", "parts.xml"))
 packages_filepath_default = Path(os.path.join(Path.home(), ".openpnp2", "packages.xml"))
@@ -77,7 +77,7 @@ class OpenPnPPackagesXML():
     with open(export_path, "wb") as export_file:
       export_file.write(xml)
     
-  def insertKiCadModPads(self, kicad_mod, package_alias=None, overwrite=False):
+  def insertKiCadModPads(self, kicad_mod, package_alias=None, extents_layer="", overwrite=False):
     
     kicad_package_id = kicad_mod.name
     if package_alias:
@@ -111,13 +111,33 @@ class OpenPnPPackagesXML():
           pad_attribs["rotation"] = str(kicad_pad["pos"]["orientation"])
           pad_attribs["roundness"] = str(0.0)
           pad_element = etree.SubElement(footprint_element, "pad", pad_attribs)
-#           pad_attribs = pad_element.attrib
-#           pad_attribs["name"] = kicad_pad["number"]
-#           pad_attribs["x"] = kicad_pad["pos"]["x"]
-#           pad_attribs["y"] = kicad_pad["pos"]["y"]
-#           pad_attribs["rotation"] = kicad_pad["pos"]["orientation"]
-       
-  def __check_pt_extents(self, x, y):
+          
+        line_pts = np.zeros([0,2])
+        for kicad_line in kicad_mod.lines:
+          if extents_layer == ""  or kicad_line["layer"] == extents_layer:
+            new_pt = np.array([[kicad_line["start"]["x"], kicad_line["start"]["y"]],]) 
+            line_pts = np.append(line_pts, new_pt, axis = 0)
+            new_pt = np.array([[kicad_line["end"]["x"], kicad_line["end"]["y"]],]) 
+            line_pts = np.append(line_pts, new_pt, axis = 0)
+            
+        if line_pts.shape[0] > 4:
+          max_x = np.max(line_pts[:,0])
+          max_y = np.max(line_pts[:,1])
+          min_x = np.min(line_pts[:,0])
+          min_y = np.min(line_pts[:,1])          
+        
+          print("Got package extents")
+          print("min_x:", max_x)
+          print("max_x:", max_x)
+          print("min_y:", min_y)
+          print("max_y:", max_y)
+        
+        else:
+          print("Not enough line information, can't set package extents")
+
+        return True
+        
+  def _check_pt_extents(self, x, y):
     if x > self.kicadmod_max_x:
       self.kicadmod_max_x = x
     if x < self.kicadmod_min_x:
