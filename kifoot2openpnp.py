@@ -9,7 +9,6 @@ from pcb.kicad_mod import KicadMod
 from tkinter import filedialog
 import configparser
 from OpenPnPParts import *
-from _struct import pack
 
 
 # class KiCadMod2OpenbPnPConverter():
@@ -53,7 +52,6 @@ def main():
     package_alias_file = config['DEFAULT']["package_alias_file"]
     size_extents_layer = config['DEFAULT']["size_extents_layer"]
 
-#     kicadmod_file_path = filedialog.askopenfilename(filetypes=[("KiCAD mod file", ".kicad_mod")], initialdir=initial_directory)
     kicadmod_file_paths = filedialog.askopenfilenames(filetypes=[("KiCAD mod file", ".kicad_mod")], initialdir=initial_directory)
 
     if len(kicadmod_file_paths) == 0:

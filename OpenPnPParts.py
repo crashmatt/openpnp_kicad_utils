@@ -143,10 +143,9 @@ class OpenPnPPackagesXML():
         else:
           print("Not enough line information, can't set package extents")
       
-      else:
-        print("Package_id: %s not found" % kicad_package_id)
+    else:
+      print("Package_id: %s not found" % kicad_package_id)
   
-        return True
         
   def _check_pt_extents(self, x, y):
     if x > self.kicadmod_max_x:

@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 from tkinter import filedialog
 import configparser
+import numpy as np
 
 from OpenPnPParts import *
 
@@ -66,6 +67,36 @@ class PartPositions():
         part_pos["Package"] = new_package
       else:
         print("No alias for package", search_package, " for part:" , part_pos["Ref"])
+        
+  def removeByValue(self, remove_val):
+    while True:
+      found = False
+      for part_pos in self.part_positions:
+        if part_pos["Val"] == remove_val:
+          self.part_positions.remove(part_pos)
+          found = True
+      if not found:
+        break
+      
+  def flipBottomToTop(self):
+    for part_pos in self.part_positions:
+      if part_pos["Side\n"] == "bottom\n":
+        part_pos["PosX"] = str(-float(part_pos["PosX"]))
+        part_pos["Side\n"] = "top\n"
+      
+  def zeroPositionOffset(self):
+    positions = np.empty([0,2])
+    for part_pos in self.part_positions:
+      xpos = float(part_pos["PosX"])
+      ypos = float(part_pos["PosY"])
+      positions = np.append(positions, [[xpos, ypos]], axis=0)
+    xpos_min = np.min(positions[:,0])
+    ypos_min = np.min(positions[:,1])
+    new_positions = positions - np.array([xpos_min,ypos_min])
+    for part_pos, new_pos in zip(self.part_positions, new_positions):
+      part_pos["PosX"] = str(new_pos[0])
+      part_pos["PosY"] = str(new_pos[1])
+    
     
   def exportToCSV(self, new_pos_file_path):
     with open(new_pos_file_path, "w") as new_pos_fle:
@@ -131,9 +162,16 @@ def main():
 
   package_alias_filepath = Path(pos_file_path)
   package_alias_filepath = package_alias_filepath.with_name("openpnp_package_alias.csv")
+  
+  package_alias_filepath = config['DEFAULT']["package_alias_file"]
   package_alises = Aliases(package_alias_filepath)
 
   part_positions.setPackagesToAliases(package_alises)
+  
+  part_positions.removeByValue("DNF")
+  
+  part_positions.flipBottomToTop()
+  part_positions.zeroPositionOffset()
   
   #Export new csv file
   pos_file_path_stem = pos_file_path.stem
