@@ -22,13 +22,36 @@ class Aliases():
     
     aliases = {}
     for alias_line in alias_lines:
-      alias_splits = alias_line.split(",")
+      alias_splits = alias_line.rstrip().split(",")
       original = str(alias_splits[0])
-      alias = str(alias_splits[1][:-1])
+      alias = str(alias_splits[1])
+      
       aliases[original] = alias
           
     self.aliases = aliases
     
+
+class PackageAdjustments(): 
+  def __init__(self, adjustment_filepath):
+    #Read and parse adjustment file
+    with open(adjustment_filepath, "r") as adjustment_file:
+      adjustment_lines = adjustment_file.readlines()
+    
+    adjustments = {}
+    for adjustment_line in adjustment_lines:
+      alias_splits = adjustment_line.rstrip().split(",")
+      if len(alias_splits) >= 3:
+        package_id = str(alias_splits[0])
+        x_offset = float(alias_splits[1])
+        y_offset = float(alias_splits[2])
+        
+        adjustment = {}
+        adjustment["x_offset"] = x_offset
+        adjustment["y_offset"] = y_offset
+        adjustments[package_id] = adjustment
+          
+    self.adjustments = adjustments
+  
     
 
 class OpenPnPParts():
@@ -46,7 +69,7 @@ class OpenPnPParts():
       part_id = part["@id"]
       part_id_dict[part_id] = part
     self.part_id_dict = part_id_dict
-      
+    
 
 class OpenPnPPackages():
   def __init__(self, packages_filepath=packages_filepath_default):
@@ -76,6 +99,12 @@ class OpenPnPPackagesXML():
     
     with open(export_path, "wb") as export_file:
       export_file.write(xml)
+      
+  def getPackageIDs(self):
+    pacakge_ids = []
+    for package_element in self.packages_tree.iter("package"):
+      pacakge_ids.append(package_element.get("id"))
+    return pacakge_ids
     
   def insertKiCadModPads(self, kicad_mod, package_alias=None, extents_layer="", overwrite=False):
     
@@ -139,13 +168,18 @@ class OpenPnPPackagesXML():
           footprint_atttribs["body-width"] = str(body_width)
           footprint_atttribs["body-height"] = str(body_height)
           print(footprint_atttribs)
-        
+                
         else:
           print("Not enough line information, can't set package extents")
+          return False
+
+        return True
+
+#       else:
+#         print("kicad package:%s did not match openpnp package:%s" %(kicad_package_id, package_element_id))
       
-    else:
-      print("Package_id: %s not found" % kicad_package_id)
-  
+    print("Package_id: %s not found" % kicad_package_id)
+    return False
         
   def _check_pt_extents(self, x, y):
     if x > self.kicadmod_max_x:

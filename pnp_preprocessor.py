@@ -81,8 +81,8 @@ class PartPositions():
       
   def flipBottomToTop(self):
     for part_pos in self.part_positions:
-      if part_pos["Side"] == "bottom\n":
-        part_pos["PosX"] = str(-float(part_pos["PosX"]))
+      if part_pos["Side"] == "bottom":
+#        part_pos["PosX"] = str(-float(part_pos["PosX"]))
         part_pos["Side"] = "top"
       
   def zeroPositionOffset(self):
@@ -175,7 +175,7 @@ def main():
   part_positions.removeByValue("DNF")
   
   part_positions.flipBottomToTop()
-  part_positions.zeroPositionOffset()
+#   part_positions.zeroPositionOffset()
   
   #Export new csv file
   pos_file_path_stem = pos_file_path.stem

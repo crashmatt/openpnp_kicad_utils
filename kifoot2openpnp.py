@@ -45,11 +45,13 @@ def main():
     default_directory = os.getcwd()
     config['DEFAULT'] = {"kicad_mod_directory": default_directory}
     config['DEFAULT']["package_alias_file"] = os.path.join(os.getcwd(), "openpnp_package_alias.csv")
+    config['DEFAULT']["package_adjustment_file"] = os.path.join(os.getcwd(), "openpnp_package_adjustments.csv")
     config['DEFAULT']["size_extents_layer"] = "F.Fab"
     
     config.read("config.ini")    
     initial_directory = config['DEFAULT']["kicad_mod_directory"]
     package_alias_file = config['DEFAULT']["package_alias_file"]
+    package_adjustment_file = config['DEFAULT']["package_adjustment_file"]
     size_extents_layer = config['DEFAULT']["size_extents_layer"]
 
     kicadmod_file_paths = filedialog.askopenfilenames(filetypes=[("KiCAD mod file", ".kicad_mod")], initialdir=initial_directory)
@@ -60,9 +62,12 @@ def main():
 
 
     package_aliases = Aliases(package_alias_file).aliases
+#     package_adjustments = PackageAdjustments(package_adjustment_file)
         
     packages = OpenPnPPackagesXML()
-    
+    print(packages.getPackageIDs())
+#     return
+         
     for kicadmod_file_path in kicadmod_file_paths:
           
       kicadmod_file_path = Path(kicadmod_file_path)
@@ -70,7 +75,7 @@ def main():
       
       config['DEFAULT']["kicad_mod_directory"] = str(new_directory)
 
-      kicadmod = KicadMod(kicadmod_file_path)        
+      kicadmod = KicadMod(kicadmod_file_path)
       packages.insertKiCadModPads(kicadmod, package_alias=package_aliases)
 
               
