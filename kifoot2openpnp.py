@@ -8,7 +8,10 @@ import os
 from pcb.kicad_mod import KicadMod
 from tkinter import filedialog
 import configparser
+import glob
 from OpenPnPParts import *
+
+from optparse import OptionParser
 
 
 # class KiCadMod2OpenbPnPConverter():
@@ -53,15 +56,31 @@ def main():
     package_alias_file = config['DEFAULT']["package_alias_file"]
     package_adjustment_file = config['DEFAULT']["package_adjustment_file"]
     size_extents_layer = config['DEFAULT']["size_extents_layer"]
+    
+    parser = OptionParser()
+    parser.add_option("-a", "--alias", dest="package_alias_file", default=package_alias_file)
+    parser.add_option("-d", "--dir", dest="modfile_directory", default="")
+    parser.add_option("-o", "--out", dest="output_file", default="")
+    parser.add_option("-n", "--no_backup", dest="no_backup", default=False, action="store_true")
+    parser.add_option("-y", "--norm_ypos", dest="normal_ypos", default=False, action="store_true", help="Don't invert the y position of elements")
+    
+    (options, args) = parser.parse_args()
 
-    kicadmod_file_paths = filedialog.askopenfilenames(filetypes=[("KiCAD mod file", ".kicad_mod")], initialdir=initial_directory)
 
-    if len(kicadmod_file_paths) == 0:
-      print("No file selected")
-      return
+    if options.modfile_directory != "":
+      modfile_directory = options.modfile_directory
+    else:
+      modfile_directory = filedialog.askdirectory(initialdir=initial_directory, mustexist=True)
+#       kicadmod_file_paths = filedialog.askopenfilenames(filetypes=[("KiCAD mod file", ".kicad_mod")], initialdir=initial_directory)
 
+      if modfile_directory is None:
+        print("No directory selected")
+        return
 
-    package_aliases = Aliases(package_alias_file).aliases
+    globsearch = os.path.join(modfile_directory, "*.kicad_mod")
+    kicadmod_file_paths = glob.glob(globsearch)
+      
+    package_aliases = Aliases(options.package_alias_file).aliases
 #     package_adjustments = PackageAdjustments(package_adjustment_file)
         
     packages = OpenPnPPackagesXML()
@@ -76,11 +95,25 @@ def main():
       config['DEFAULT']["kicad_mod_directory"] = str(new_directory)
 
       kicadmod = KicadMod(kicadmod_file_path)
-      packages.insertKiCadModPads(kicadmod, package_alias=package_aliases)
+      packages.insertKiCadModPads(kicadmod, invert_ypos=not options.normal_ypos ,package_alias=package_aliases)
 
-              
-    export_packages_path = Path(packages_filepath_default)
-    export_packages_path = export_packages_path.with_name("kicad_export_packages.xml")
+    if options.output_file != "":
+      export_packages_path  = options.output_file
+    else:
+      export_packages_path = Path(packages_filepath_default)
+      export_packages_path = export_packages_path.with_name("kicad_export_packages.xml")
+    
+    if os.path.isfile(export_packages_path):
+      if not options.no_backup:
+        #Find next available backup increment
+        backup_increment = 0
+        while os.path.exists(Path(export_packages_path).with_suffix(".bak%s.xml" % backup_increment)):
+          backup_increment += 1
+        #Move existing file to new backup increment
+        backup_path = Path(export_packages_path).with_suffix(".bak%s.xml" % backup_increment)
+        backup = Path(export_packages_path)
+        backup.rename(backup_path)
+      
     packages.exportPackages(export_packages_path)
 
     with open('config.ini', 'w') as configfile:

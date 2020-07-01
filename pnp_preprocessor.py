@@ -8,7 +8,9 @@ import os
 from pathlib import Path
 from tkinter import filedialog
 import configparser
-import numpy as np
+# import numpy as np
+from optparse import OptionParser
+import glob
 
 from OpenPnPParts import *
 
@@ -83,7 +85,32 @@ class PartPositions():
     for part_pos in self.part_positions:
       if part_pos["Side"] == "bottom":
 #        part_pos["PosX"] = str(-float(part_pos["PosX"]))
+        rotation = float(part_pos["Rot"])
+        rotation = -rotation
+        rotation += 180.0
+        if rotation > 180.0:
+          rotation -= 360.0
+        part_pos["Rot"] = str(rotation)
+#        part_pos["PosX"] = str(-float(part_pos["PosX"]))
         part_pos["Side"] = "top"
+
+  def mirrorBottomXpos(self):
+    for part_pos in self.part_positions:
+      if part_pos["Side"] == "bottom":
+        part_pos["PosX"] = str(-float(part_pos["PosX"]))
+ #        part_pos["PosX"] = str(-float(part_pos["PosX"]))
+#         part_pos["Side"] = "top"
+
+  def rotateBottomXpos(self):
+    for part_pos in self.part_positions:
+      if part_pos["Side"] == "bottom":
+        rotation = float(part_pos["Rot"])
+        rotation = -rotation
+        rotation += 180.0
+        if rotation > 180.0:
+          rotation -= 360.0
+        part_pos["Rot"] = str(rotation)
+    
       
   def zeroPositionOffset(self):
     positions = np.empty([0,2])
@@ -132,12 +159,26 @@ def main():
 
   pos_file_path = Path(config['DEFAULT']["filepath"])
   posfile_directory = pos_file_path.parent
-  posfile_name = pos_file_path.name    
-
-  pos_file_path = filedialog.askopenfilename(filetypes=[("KiCAD position file", ".csv")] , initialdir=posfile_directory, initialfile=posfile_name)
+  posfile_name = pos_file_path.name
   
-  if not pos_file_path:
-    return;
+  parser = OptionParser()
+  parser.add_option("-a", "--alias", dest="package_alias_filepath", default=config['DEFAULT']["package_alias_file"])
+  parser.add_option("-d", "--dir", dest="posfile", default="")
+  parser.add_option("-o", "--out", dest="outfile", default="")
+  parser.add_option("-f", "--flip_bottom", dest="flip_bottom", default=False, action="store_true")
+  
+      
+  (options, args) = parser.parse_args()
+
+  package_alias_filepath = Path(options.package_alias_filepath)
+  
+  if options.posfile != "":
+    pos_file_path = options.posfile
+  else:
+    pos_file_path = filedialog.askopenfilename(filetypes=[("KiCAD position file", ".csv")] , initialdir=posfile_directory, initialfile=posfile_name)
+  
+    if not pos_file_path:
+      return;
 
   if "alias" in pos_file_path:
     print("ERROR: attempting to open alias file as input")
@@ -151,7 +192,6 @@ def main():
   config['DEFAULT']["filepath"] = pos_file_path
 
   pos_file_path = Path(pos_file_path)
-  
   part_positions = PartPositions(pos_file_path)
 
   openpnp_parts = OpenPnPParts()
@@ -160,28 +200,31 @@ def main():
   with open('config.ini', 'w') as configfile:
     config.write(configfile)
 #       
-  part_alias_filepath = Path(pos_file_path)
-  part_alias_filepath = part_alias_filepath.with_name("openpnp_partname_alias.csv")
-  part_alises = Aliases(part_alias_filepath)
-
-  package_alias_filepath = Path(pos_file_path)
-  package_alias_filepath = package_alias_filepath.with_name("openpnp_package_alias.csv")
+#   part_alias_filepath = Path(pos_file_path)
+#   part_alias_filepath = part_alias_filepath.with_name("openpnp_partname_alias.csv")
+#   part_alises = Aliases(part_alias_filepath)
   
-  package_alias_filepath = config['DEFAULT']["package_alias_file"]
   package_alises = Aliases(package_alias_filepath)
 
   part_positions.setPackagesToAliases(package_alises)
   
   part_positions.removeByValue("DNF")
   
-  part_positions.flipBottomToTop()
-#   part_positions.zeroPositionOffset()
+  if options.flip_bottom:
+    part_positions.flipBottomToTop()
+  else:
+    part_positions.mirrorBottomXpos()
+    part_positions.rotateBottom180()
   
   #Export new csv file
-  pos_file_path_stem = pos_file_path.stem
-  new_pos_file_path_name = pos_file_path_stem + "_openpnp.csv"
-  new_pos_file_path = Path(pos_file_path)
-  new_pos_file_path = new_pos_file_path.with_name(new_pos_file_path_name)
+  if options.outfile != "":
+    new_pos_file_path = Path(options.outfile)
+  else:
+    pos_file_path_stem = pos_file_path.stem
+    new_pos_file_path_name = pos_file_path_stem + "_openpnp.csv"
+    new_pos_file_path = Path(pos_file_path)
+    new_pos_file_path = new_pos_file_path.with_name(new_pos_file_path_name)
+
   part_positions.exportToCSV(new_pos_file_path)
   print("new_pos_file_path:", new_pos_file_path)
   

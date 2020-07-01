@@ -106,7 +106,7 @@ class OpenPnPPackagesXML():
       pacakge_ids.append(package_element.get("id"))
     return pacakge_ids
     
-  def insertKiCadModPads(self, kicad_mod, package_alias=None, extents_layer="", overwrite=False):
+  def insertKiCadModPads(self, kicad_mod, package_alias=None, extents_layer="", overwrite=False, invert_ypos=True):
     
     kicad_package_id = kicad_mod.name
     if package_alias:
@@ -134,7 +134,10 @@ class OpenPnPPackagesXML():
           pad_attribs =  {}
           pad_attribs["name"] = str(kicad_pad["number"])
           pad_attribs["x"] = str(kicad_pad["pos"]["x"])
-          pad_attribs["y"] = str(kicad_pad["pos"]["y"])
+          pos_y = float(kicad_pad["pos"]["y"])
+          if invert_ypos:
+            pos_y = -pos_y
+          pad_attribs["y"] = str(pos_y)
           pad_attribs["width"] = str(kicad_pad["size"]["x"])
           pad_attribs["height"] = str(kicad_pad["size"]["y"])
           pad_attribs["rotation"] = str(kicad_pad["pos"]["orientation"])
