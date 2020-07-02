@@ -62,7 +62,9 @@ def main():
     parser.add_option("-d", "--dir", dest="modfile_directory", default="")
     parser.add_option("-o", "--out", dest="output_file", default="")
     parser.add_option("-n", "--no_backup", dest="no_backup", default=False, action="store_true")
-    parser.add_option("-y", "--norm_ypos", dest="normal_ypos", default=False, action="store_true", help="Don't invert the y position of elements")
+    parser.add_option("-x", "--xinv", dest="invert_xpos", default=False, action="store_true", help="Invert the x position of elements")
+    parser.add_option("-y", "--yinv", dest="invert_ypos", default=False, action="store_true", help="Invert the y position of elements")
+    parser.add_option("-m", "--mark", dest="mark_pin1", default=False, action="store_true", help="Mark pin 1")
     
     (options, args) = parser.parse_args()
 
@@ -95,13 +97,17 @@ def main():
       config['DEFAULT']["kicad_mod_directory"] = str(new_directory)
 
       kicadmod = KicadMod(kicadmod_file_path)
-      packages.insertKiCadModPads(kicadmod, invert_ypos=not options.normal_ypos ,package_alias=package_aliases)
+      packages.insertKiCadModPads(kicadmod, 
+                                  invert_xpos=options.invert_xpos ,
+                                  invert_ypos=options.invert_ypos ,
+                                  package_alias=package_aliases,
+                                  mark_pin1=options.mark_pin1)
 
     if options.output_file != "":
       export_packages_path  = options.output_file
     else:
       export_packages_path = Path(packages_filepath_default)
-      export_packages_path = export_packages_path.with_name("kicad_export_packages.xml")
+#      export_packages_path = export_packages_path.with_name("kicad_export_packages.xml")
     
     if os.path.isfile(export_packages_path):
       if not options.no_backup:

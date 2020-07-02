@@ -106,7 +106,7 @@ class OpenPnPPackagesXML():
       pacakge_ids.append(package_element.get("id"))
     return pacakge_ids
     
-  def insertKiCadModPads(self, kicad_mod, package_alias=None, extents_layer="", overwrite=False, invert_ypos=True):
+  def insertKiCadModPads(self, kicad_mod, package_alias=None, extents_layer="", overwrite=False, invert_ypos=False, invert_xpos=False, mark_pin1=False):
     
     kicad_package_id = kicad_mod.name
     if package_alias:
@@ -133,16 +133,31 @@ class OpenPnPPackagesXML():
         for kicad_pad in kicad_mod.pads:
           pad_attribs =  {}
           pad_attribs["name"] = str(kicad_pad["number"])
-          pad_attribs["x"] = str(kicad_pad["pos"]["x"])
+
+          pos_x = float(kicad_pad["pos"]["x"])
           pos_y = float(kicad_pad["pos"]["y"])
+          
+          if invert_xpos:
+            pos_x = -pos_x
           if invert_ypos:
             pos_y = -pos_y
+            
+          pad_attribs["x"] = str(pos_x)
           pad_attribs["y"] = str(pos_y)
           pad_attribs["width"] = str(kicad_pad["size"]["x"])
           pad_attribs["height"] = str(kicad_pad["size"]["y"])
           pad_attribs["rotation"] = str(kicad_pad["pos"]["orientation"])
           pad_attribs["roundness"] = str(0.0)
           pad_element = etree.SubElement(footprint_element, "pad", pad_attribs)
+          
+          if mark_pin1 and pad_attribs["name"] == "1":
+            pin1_mark_attribs =  dict(pad_attribs)
+            pin1_mark_attribs["name"] == "0"
+            pin1_mark_attribs["width"] = str(float(pin1_mark_attribs["width"])*0.5)
+            pin1_mark_attribs["height"] = str(float(pin1_mark_attribs["height"])*0.5)
+            pad_element = etree.SubElement(footprint_element, "pad", pin1_mark_attribs)
+            
+            
           
         line_pts = np.zeros([0,2])
         for kicad_line in kicad_mod.lines:

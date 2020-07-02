@@ -101,7 +101,7 @@ class PartPositions():
  #        part_pos["PosX"] = str(-float(part_pos["PosX"]))
 #         part_pos["Side"] = "top"
 
-  def rotateBottomXpos(self):
+  def reverseBottomRotation(self):
     for part_pos in self.part_positions:
       if part_pos["Side"] == "bottom":
         rotation = float(part_pos["Rot"])
@@ -166,6 +166,8 @@ def main():
   parser.add_option("-d", "--dir", dest="posfile", default="")
   parser.add_option("-o", "--out", dest="outfile", default="")
   parser.add_option("-f", "--flip_bottom", dest="flip_bottom", default=False, action="store_true")
+  parser.add_option("-r", "--rev_bottom", dest="reverse_bottom", default=False, action="store_true")
+  
   
       
   (options, args) = parser.parse_args()
@@ -214,7 +216,10 @@ def main():
     part_positions.flipBottomToTop()
   else:
     part_positions.mirrorBottomXpos()
-    part_positions.rotateBottom180()
+    
+  if options.reverse_bottom:
+    part_positions.reverseBottomRotation()
+    
   
   #Export new csv file
   if options.outfile != "":
