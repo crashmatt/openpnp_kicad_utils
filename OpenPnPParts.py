@@ -9,6 +9,12 @@ from pathlib import Path
 import os
 from lxml import etree
 import numpy as np
+from posix import mkdir
+import qrcode
+
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
 
 parts_filepath_default = Path(os.path.join(Path.home(), ".openpnp2", "parts.xml"))
 packages_filepath_default = Path(os.path.join(Path.home(), ".openpnp2", "packages.xml"))
@@ -70,6 +76,75 @@ class OpenPnPParts():
       part_id_dict[part_id] = part
     self.part_id_dict = part_id_dict
     
+  def makeQRCodes(self):
+    for part in self.parts:
+      part_id = part["@id"]
+      
+      qr = qrcode.QRCode(
+          version=None,
+          error_correction=qrcode.constants.ERROR_CORRECT_M,
+          box_size=4,
+          border=4,
+      )
+      
+      qr.add_data(part_id)
+      qr.make(fit=True)
+
+      img = qr.make_image(fill_color="black", back_color="white")
+      
+      part["qrc_img"] = img
+      
+  def resizeQRCodes(self, scale):
+    for part in self.parts:
+      qrc_img = part["qrc_img"]
+      width, height = qrc_img.size
+      
+      width = int(width * scale)
+      height = int(height * scale)
+      
+      qrc_img = qrc_img.resize( (width, height) )
+      part["qrc_img"] = qrc_img
+      
+  def addQRCodeTitle(self):
+    for part in self.parts:
+      part_id = part["@id"]
+      qrc_img = part["qrc_img"]
+      qrc_width, qrc_height = qrc_img.size
+      
+#       font = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 12)
+#       font = ImageFont.load_default()
+#       font = ImageFont(font, )
+      font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf", 16)
+      textwidth, textheight = font.getsize(part_id)
+      
+      new_width = int(qrc_width + (textwidth * 1.2))
+      
+      newimg = Image.new(qrc_img.mode, (new_width, qrc_height), "white")
+      
+      newimg.paste(qrc_img, (0,0))
+      
+      text_hpos = int(qrc_width + (textwidth/10))
+      text_vpos = int( (qrc_height-textheight)/2 )
+      draw = ImageDraw.Draw(newimg)
+      
+      draw.text( (text_hpos, text_vpos), part_id, font=font)
+      
+      part["qrc_img"] = newimg
+
+  def saveQRCodeIMages(self):
+    qr_directory = os.path.join( os.getcwd(), "OpenPnpPartQRCodes")
+    if not os.path.exists(qr_directory):
+      os.mkdir(qr_directory)
+
+    for part in self.parts:
+      part_id = part["@id"]
+      part_filename = part_id + ".png"
+      #replace directory characters
+      part_filename = part_filename.replace("/", "-")
+      part_filename = part_filename.replace("\\", "-")
+      part_path = os.path.join(qr_directory, part_filename)
+
+      part["qrc_img"].save(part_path)
 
 class OpenPnPPackages():
   def __init__(self, packages_filepath=packages_filepath_default):
@@ -106,7 +181,13 @@ class OpenPnPPackagesXML():
       pacakge_ids.append(package_element.get("id"))
     return pacakge_ids
     
-  def insertKiCadModPads(self, kicad_mod, package_alias=None, extents_layer="", overwrite=False, invert_ypos=False, invert_xpos=False, mark_pin1=False):
+  def insertKiCadModPads(self, kicad_mod, 
+                         package_alias=None, 
+                         extents_layer="", 
+                         overwrite=False, 
+                         invert_ypos=False, 
+                         invert_xpos=False, 
+                         marked_pin_names=[]):
     
     kicad_package_id = kicad_mod.name
     if package_alias:
@@ -150,7 +231,7 @@ class OpenPnPPackagesXML():
           pad_attribs["roundness"] = str(0.0)
           pad_element = etree.SubElement(footprint_element, "pad", pad_attribs)
           
-          if mark_pin1 and pad_attribs["name"] == "1":
+          if pad_attribs["name"] in marked_pin_names:
             pin1_mark_attribs =  dict(pad_attribs)
             pin1_mark_attribs["name"] == "0"
             pin1_mark_attribs["width"] = str(float(pin1_mark_attribs["width"])*0.5)
@@ -209,5 +290,15 @@ class OpenPnPPackagesXML():
     if y < self.kicadmod_min_y:
       self.kicadmod_min_y = y
    
-     
+   
+def main():
+  open_pnp_parts = OpenPnPParts()
+  open_pnp_parts.makeQRCodes()
+  open_pnp_parts.resizeQRCodes(0.25)
+  open_pnp_parts.addQRCodeTitle()
+  open_pnp_parts.saveQRCodeIMages()
+   
+if __name__ == '__main__':
+    main()
+    
     
