@@ -11,6 +11,7 @@ from lxml import etree
 import numpy as np
 from posix import mkdir
 import qrcode
+from math import ceil
 
 from PIL import Image
 from PIL import ImageDraw
@@ -131,29 +132,45 @@ class OpenPnPParts():
       
       part["qrc_img"] = newimg
       
-  def makeConcatenatedQRImage(self, max_px_width=0):
+  def makeConcatenatedQRImage(self, columns=3):
     max_width = 0
-    total_height = 0
+    max_height = 0
+    part_ids = []
+
     for part in self.parts:
+      part_ids.append(part["@id"])
       qrc_img = part["qrc_img"]
       qrc_width, qrc_height = qrc_img.size
       if qrc_width > max_width:
         max_width = qrc_width
-      total_height += qrc_height
+      if qrc_height > max_height:
+        max_height = qrc_height
+      
+    part_rows = int(ceil(len(self.parts) / columns))
+    
+    total_height = part_rows * max_height
 
-    height_offset = 0
-    newimg = Image.new(qrc_img.mode, (max_width, total_height), "white")
-    for part in self.parts:
-      qrc_img = part["qrc_img"]
-      qrc_width, qrc_height = qrc_img.size
+    newimg = Image.new(qrc_img.mode, (max_width*columns, total_height), "white")
+    column = 0
+    row = 0
 
-      newimg.paste(qrc_img, (0,height_offset))      
-      height_offset += qrc_height
+    sorted_part_ids = sorted(part_ids)
+    
+    for sorted_id in sorted_part_ids:
+      for part in self.parts:
+        if part["@id"] == sorted_id:
+          qrc_img = part["qrc_img"]
+          newimg.paste(qrc_img, (column * max_width, row * max_height))
+          column += 1
+          if column >= columns:
+            row += 1
+            column = 0
+      
     return newimg
     
       
-  def saveConcatenatedQRImage(self):
-    img = self.makeConcatenatedQRImage()
+  def saveConcatenatedQRImage(self, columns):
+    img = self.makeConcatenatedQRImage(columns)
     qr_directory = os.path.join( os.getcwd(), "OpenPnpPartQRCodes")
     if not os.path.exists(qr_directory):
       os.mkdir(qr_directory)
@@ -323,10 +340,10 @@ class OpenPnPPackagesXML():
 def main():
   open_pnp_parts = OpenPnPParts()
   open_pnp_parts.makeQRCodes()
-#   open_pnp_parts.resizeQRCodes(0.25)
+  open_pnp_parts.resizeQRCodes(0.5)
   open_pnp_parts.addQRCodeTitle()
   open_pnp_parts.saveQRCodeImages()
-  open_pnp_parts.saveConcatenatedQRImage()
+  open_pnp_parts.saveConcatenatedQRImage(3)
    
 if __name__ == '__main__':
     main()
