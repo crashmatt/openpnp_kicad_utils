@@ -64,7 +64,7 @@ def main():
     parser.add_option("-n", "--no_backup", dest="no_backup", default=False, action="store_true")
     parser.add_option("-x", "--xinv", dest="invert_xpos", default=False, action="store_true", help="Invert the x position of elements")
     parser.add_option("-y", "--yinv", dest="invert_ypos", default=False, action="store_true", help="Invert the y position of elements")
-    parser.add_option("-m", "--mark", dest="mark_pin1", default=False, action="store_true", help="Mark pin 1")
+    parser.add_option("-m", "--mark", dest="marked_pin_names", type="string", action="append", help="Mark this pin name to identify it")
     
     (options, args) = parser.parse_args()
 
@@ -101,7 +101,7 @@ def main():
                                   invert_xpos=options.invert_xpos ,
                                   invert_ypos=options.invert_ypos ,
                                   package_alias=package_aliases,
-                                  mark_pin1=options.mark_pin1)
+                                  marked_pin_names=options.marked_pin_names)
 
     if options.output_file != "":
       export_packages_path  = options.output_file
