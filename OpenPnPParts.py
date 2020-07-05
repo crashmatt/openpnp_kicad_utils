@@ -130,8 +130,37 @@ class OpenPnPParts():
       draw.text( (text_hpos, text_vpos), part_id, font=font)
       
       part["qrc_img"] = newimg
+      
+  def makeConcatenatedQRImage(self, max_px_width=0):
+    max_width = 0
+    total_height = 0
+    for part in self.parts:
+      qrc_img = part["qrc_img"]
+      qrc_width, qrc_height = qrc_img.size
+      if qrc_width > max_width:
+        max_width = qrc_width
+      total_height += qrc_height
 
-  def saveQRCodeIMages(self):
+    height_offset = 0
+    newimg = Image.new(qrc_img.mode, (max_width, total_height), "white")
+    for part in self.parts:
+      qrc_img = part["qrc_img"]
+      qrc_width, qrc_height = qrc_img.size
+
+      newimg.paste(qrc_img, (0,height_offset))      
+      height_offset += qrc_height
+    return newimg
+    
+      
+  def saveConcatenatedQRImage(self):
+    img = self.makeConcatenatedQRImage()
+    qr_directory = os.path.join( os.getcwd(), "OpenPnpPartQRCodes")
+    if not os.path.exists(qr_directory):
+      os.mkdir(qr_directory)
+    part_path = os.path.join(qr_directory, "concatenated.png")
+    img.save(part_path)
+
+  def saveQRCodeImages(self):
     qr_directory = os.path.join( os.getcwd(), "OpenPnpPartQRCodes")
     if not os.path.exists(qr_directory):
       os.mkdir(qr_directory)
@@ -294,9 +323,10 @@ class OpenPnPPackagesXML():
 def main():
   open_pnp_parts = OpenPnPParts()
   open_pnp_parts.makeQRCodes()
-  open_pnp_parts.resizeQRCodes(0.25)
+#   open_pnp_parts.resizeQRCodes(0.25)
   open_pnp_parts.addQRCodeTitle()
-  open_pnp_parts.saveQRCodeIMages()
+  open_pnp_parts.saveQRCodeImages()
+  open_pnp_parts.saveConcatenatedQRImage()
    
 if __name__ == '__main__':
     main()
