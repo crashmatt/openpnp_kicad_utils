@@ -5,13 +5,14 @@
 
 from pathlib import Path
 import os
-from pcb.kicad_mod import KicadMod
 from tkinter import filedialog
 import configparser
 import glob
 from OpenPnPParts import *
 
 from optparse import OptionParser
+
+from pcb.kicad_mod import KicadMod
 
 
 # class KiCadMod2OpenbPnPConverter():
