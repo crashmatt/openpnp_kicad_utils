@@ -106,29 +106,35 @@ class OpenPnPParts():
       qrc_img = qrc_img.resize( (width, height) )
       part["qrc_img"] = qrc_img
       
-  def addQRCodeTitle(self):
+  def addQRCodeTitle(self, left=True, ttf_path="/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf"):
+    text_margin = 0.05
     for part in self.parts:
       part_id = part["@id"]
       qrc_img = part["qrc_img"]
       qrc_width, qrc_height = qrc_img.size
       
-#       font = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 12)
-#       font = ImageFont.load_default()
-#       font = ImageFont(font, )
-      font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf", 16)
+      font = ImageFont.truetype(ttf_path, 16)
       textwidth, textheight = font.getsize(part_id)
       
-      new_width = int(qrc_width + (textwidth * 1.2))
+      adj_text_width = int(textwidth * (1+2*text_margin))
+      new_width = int(qrc_width + adj_text_width)
       
       newimg = Image.new(qrc_img.mode, (new_width, qrc_height), "white")
       
-      newimg.paste(qrc_img, (0,0))
-      
-      text_hpos = int(qrc_width + (textwidth/10))
       text_vpos = int( (qrc_height-textheight)/2 )
-      draw = ImageDraw.Draw(newimg)
+
+      if left==True:
+        text_hpos = int(textwidth*text_margin)
+        draw = ImageDraw.Draw(newimg)
+        draw.text( (text_hpos, text_vpos), part_id, font=font)
+        newimg.paste(qrc_img, (adj_text_width,0))
+        
+      else:  
+        newimg.paste(qrc_img, (0,0))
       
-      draw.text( (text_hpos, text_vpos), part_id, font=font)
+        text_hpos = int(qrc_width + (textwidth*text_margin))
+        draw = ImageDraw.Draw(newimg)
+        draw.text( (text_hpos, text_vpos), part_id, font=font)
       
       part["qrc_img"] = newimg
       
