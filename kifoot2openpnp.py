@@ -1,3 +1,4 @@
+'''
 Copyright (c) 2020, Matthew Coleman
 
 All rights reserved.
@@ -25,6 +26,7 @@ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
 LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+'''
 
 from pathlib import Path
 import os
@@ -38,31 +40,7 @@ from optparse import OptionParser
 from pcb.kicad_mod import KicadMod
 
 
-# class KiCadMod2OpenbPnPConverter():
-#   def __init__(self, kicadmod):
-#     self.max_x = 0
-#     self.min_x = 0
-#     self.max_y = 0
-#     self.min_y = 0
-#       
-#     for mod_line in kicadmod.lines:
-#       self._check_pt_extents(mod_line["start"]["x"], mod_line["start"]["y"])
-#       self._check_pt_extents(mod_line["end"]["x"], mod_line["end"]["y"])
-#       
-#     print("max_x", self.max_x)  
-#     print("min_x", self.min_x)  
-#     print("max_y", self.max_y)  
-#     print("min_y", self.min_y)  
-#     
-#   def _check_pt_extents(self, x, y):
-#     if x > self.max_x:
-#       self.max_x = x
-#     if x < self.min_x:
-#       self.mn_x = x
-#     if y > self.max_x:
-#       self.max_x = x
-#     if y < self.min_y:
-#       self.min_y = y
+
 
       
       
