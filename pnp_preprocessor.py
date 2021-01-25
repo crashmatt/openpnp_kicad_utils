@@ -30,9 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
 from pathlib import Path
-from tkinter import filedialog
+import tkinter.filedialog as filedialog 
 import configparser
-# import numpy as np
 from optparse import OptionParser
 import glob
 
@@ -162,9 +161,30 @@ class PartPositions():
           new_pos_fle.write(valstr)
         new_pos_fle.write(comp_pos[self.headers[-1]])
         new_pos_fle.write("\n")
+        
+  def make_outfile_path(self):    
+    pos_file_path = Path(self.pos_file_path)
+    pos_file_path_stem = pos_file_path.stem
+    new_pos_file_path_name = pos_file_path_stem + "_openpnp.csv"
+    new_pos_file_path = Path(pos_file_path)
+    new_pos_file_path = new_pos_file_path.with_name(new_pos_file_path_name)   
+    return new_pos_file_path 
 
+  def process(self, part_aliases, package_aliases, flip_bottom, reverse_bottom, out_filepath):
+    self.setPackagesToAliases(package_aliases)
     
+    self.removeByValue("DNF")
     
+    if flip_bottom:
+      self.flipBottomToTop()
+    else:
+      self.mirrorBottomXpos()
+      
+    if reverse_bottom:
+      self.reverseBottomRotation()
+    
+    self.exportToCSV(out_filepath)
+      
 def main():
   config = configparser.ConfigParser()
   
@@ -184,8 +204,6 @@ def main():
   parser.add_option("-f", "--flip_bottom", dest="flip_bottom", default=False, action="store_true")
   parser.add_option("-r", "--rev_bottom", dest="reverse_bottom", default=False, action="store_true")
   
-  
-      
   (options, args) = parser.parse_args()
 
   package_alias_filepath = Path(options.package_alias_filepath)
@@ -211,10 +229,7 @@ def main():
 
   pos_file_path = Path(pos_file_path)
   part_positions = PartPositions(pos_file_path)
-
-  openpnp_parts = OpenPnPParts()
   
-
   with open('config.ini', 'w') as configfile:
     config.write(configfile)
 #       
@@ -222,32 +237,16 @@ def main():
 #   part_alias_filepath = part_alias_filepath.with_name("openpnp_partname_alias.csv")
 #   part_alises = Aliases(part_alias_filepath)
   
-  package_alises = Aliases(package_alias_filepath)
-
-  part_positions.setPackagesToAliases(package_alises)
-  
-  part_positions.removeByValue("DNF")
-  
-  if options.flip_bottom:
-    part_positions.flipBottomToTop()
-  else:
-    part_positions.mirrorBottomXpos()
+  package_aliases = Aliases(package_alias_filepath)
     
-  if options.reverse_bottom:
-    part_positions.reverseBottomRotation()
-    
-  
   #Export new csv file
   if options.outfile != "":
     new_pos_file_path = Path(options.outfile)
   else:
-    pos_file_path_stem = pos_file_path.stem
-    new_pos_file_path_name = pos_file_path_stem + "_openpnp.csv"
-    new_pos_file_path = Path(pos_file_path)
-    new_pos_file_path = new_pos_file_path.with_name(new_pos_file_path_name)
-
-  part_positions.exportToCSV(new_pos_file_path)
-  print("new_pos_file_path:", new_pos_file_path)
+    new_pos_file_path = part_positions.make_outfile_path()
+  print("new_pos_file_path:", new_pos_file_path)    
+    
+  part_positions.process(None, package_aliases, options.flip_bottom, options.reverse_bottom, new_pos_file_path)
   
   
 
