@@ -19,12 +19,14 @@ class PreprocessorApp:
         builder.add_from_file(PROJECT_UI)
         self.mainwindow = builder.get_object('frame_pnp_preprocess')
         builder.connect_callbacks(self)
+
+        self.preprocessor_config_path = os.path.join(PROJECT_PATH, "preprocessor_config.ini")
         
         #Get the project filepath from preprocessor config
-        preprocessor_config = configparser.ConfigParser()
-        preprocessor_config['PROJECT'] = {"config_filepath": "config.ini"}
-        preprocessor_config.read("preprocessor_config.ini")
-        config_filepath = preprocessor_config['PROJECT']["config_filepath"]
+        self.preprocessor_config = configparser.ConfigParser()
+        self.preprocessor_config['PROJECT'] = {"config_filepath": "config.ini"}
+        self.preprocessor_config.read(self.preprocessor_config_path)
+        config_filepath = self.preprocessor_config['PROJECT']["config_filepath"]
         
         #Set project config defaults
         config = configparser.ConfigParser()
@@ -53,8 +55,18 @@ class PreprocessorApp:
         reverse_bottom_checkbox = self.builder.tkvariables['reverse_bottom']        
         reverse_bottom = reverse_bottom_checkbox.set(True)            
 
+
+    def project_relative_path(self, path):
+        project_path = Path(self.preprocessor_config['PROJECT']["config_filepath"])
+        project_directory = str(project_path.parent)
+        
+        if not project_directory in str(path):
+          return None
+      
+        return os.path.relpath(str(path), project_directory)
+
     
-    def callback_select_centroid_file(self, event=None):      
+    def callback_select_centroid_file(self, event=None):
         centroid_filepath_entry = self.builder.tkvariables['centroid_filepath']        
         filepath = centroid_filepath_entry.get()
         
@@ -66,7 +78,11 @@ class PreprocessorApp:
       
         if not pos_file_path:
           return;
-
+        
+        pos_rel_path = self.project_relative_path(pos_file_path)
+        if pos_rel_path:
+          pos_file_path = pos_rel_path
+        
         if "openpnp" in pos_file_path:
             messagebox("ERROR: attempting to open an output file as input")
             return
@@ -106,12 +122,26 @@ class PreprocessorApp:
         new_pos_file_path = part_positions.make_outfile_path()
         
         part_positions.process(None, package_aliases, flip_bottom, reverse_bottom, new_pos_file_path)
-          
-        pass
-            
+
 
     def callback_select_BOM(self, event=None):
-        pass
+        bom_filepath_entry = self.builder.tkvariables['bom_filepath']        
+        filepath = bom_filepath_entry.get()
+        
+        bom_file = Path(filepath)
+        bom_directory = bom_file.parent
+        bom_name = bom_file.name
+        
+        bom_file_path = filedialog.askopenfilename(filetypes=[("KiCAD bom file", ".csv")] , initialdir=bom_directory, initialfile=bom_name)
+      
+        if not bom_file_path:
+          return;
+
+        if not "bom" in bom_file_path:
+            messagebox("ERROR: attempting to open a non bom file")
+            return
+        
+        bom_filepath_entry.set(bom_file_path)
 
     def callback_select_package_alias(self, event=None):
         pass
@@ -120,8 +150,31 @@ class PreprocessorApp:
         pass
 
     def callback_set_project_filepath(self, event=None):
-        pass      
+        project_path = Path(self.preprocessor_config_path)
+        project_directory = project_path.parent
+        project_name = project_path.name
+        
+        project_file_path = filedialog.askopenfilename(filetypes=[("PreProcessor Project", ".ini")] , initialdir=project_directory, initialfile=project_name)
+      
+        if not project_file_path:
+          return;
+        
+        if "preprocessor_config.ini" in project_file_path:
+            messagebox("ERROR: Attempt to use pre_processor_config.ini as project")
+            return
+        
+        #Set the project path
+        self.preprocessor_config_path = project_file_path
 
+        #Update project path in the gui
+        project_filepath_entry = self.builder.tkvariables['project_config_filepath']        
+        project_filepath_entry.set(project_file_path)
+        
+        #Write project path to the 
+        self.preprocessor_config['PROJECT']["config_filepath"] = project_file_path        
+        with open(self.preprocessor_config_path, 'w') as configfile:
+          self.preprocessor_config.write(configfile)
+                
     def run(self):
         self.mainwindow.mainloop()
 
