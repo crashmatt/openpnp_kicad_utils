@@ -12,11 +12,12 @@
     </layout>
     <child>
       <object class="tk.Button" id="button_generate">
+        <property name="compound">bottom</property>
         <property name="cursor">arrow</property>
         <property name="font">TkTextFont</property>
         <property name="idtocommand">false</property>
         <property name="justify">center</property>
-        <property name="takefocus">false</property>
+        <property name="takefocus">true</property>
         <property name="text" translatable="yes">GENERATE</property>
         <property name="width">50</property>
         <bind sequence="&lt;1&gt;" handler="callback_generate" add="" />
@@ -50,8 +51,7 @@
     <child>
       <object class="tk.Entry" id="entry_centroid_filepath">
         <property name="justify">left</property>
-        <property name="relief">flat</property>
-        <property name="state">normal</property>
+        <property name="state">readonly</property>
         <property name="text" translatable="yes">centroid.csv</property>
         <property name="textvariable">string:centroid_filepath</property>
         <property name="width">80</property>
@@ -81,7 +81,7 @@
     <child>
       <object class="tk.Entry" id="entry_bom_filepath">
         <property name="justify">left</property>
-        <property name="state">normal</property>
+        <property name="state">readonly</property>
         <property name="text" translatable="yes">bom.csv</property>
         <property name="textvariable">string:bom_filepath</property>
         <property name="width">80</property>
@@ -110,6 +110,7 @@
     <child>
       <object class="tk.Entry" id="entry_2">
         <property name="relief">sunken</property>
+        <property name="state">readonly</property>
         <property name="text" translatable="yes">package_alias.csv</property>
         <property name="textvariable">string:package_alias_filepath</property>
         <property name="width">80</property>
@@ -139,6 +140,7 @@
     <child>
       <object class="tk.Entry" id="entry_part_alias">
         <property name="justify">left</property>
+        <property name="state">readonly</property>
         <property name="text" translatable="yes">part_alias.csv</property>
         <property name="textvariable">string:part_alias_filepath</property>
         <property name="width">80</property>
@@ -194,12 +196,12 @@
           <property name="column">0</property>
           <property name="pady">5</property>
           <property name="propagate">True</property>
-          <property name="row">7</property>
+          <property name="row">20</property>
         </layout>
       </object>
     </child>
     <child>
-      <object class="tk.Entry" id="entry_4">
+      <object class="tk.Entry" id="entry_project_config_filepath">
         <property name="state">readonly</property>
         <property name="text" translatable="yes">config.ini</property>
         <property name="textvariable">string:project_config_filepath</property>
@@ -207,7 +209,22 @@
         <layout manager="grid">
           <property name="column">1</property>
           <property name="propagate">True</property>
-          <property name="row">7</property>
+          <property name="row">20</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="tk.Button" id="button_save_project">
+        <property name="idtocommand">false</property>
+        <property name="text" translatable="yes">SAVE PROJECT</property>
+        <property name="width">50</property>
+        <bind sequence="&lt;1&gt;" handler="callback_save_project" add="" />
+        <layout manager="grid">
+          <property name="column">0</property>
+          <property name="columnspan">2</property>
+          <property name="pady">10</property>
+          <property name="propagate">True</property>
+          <property name="row">21</property>
         </layout>
       </object>
     </child>
