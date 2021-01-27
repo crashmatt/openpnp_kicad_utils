@@ -21,9 +21,12 @@ class PreprocessorApp:
         builder.connect_callbacks(self)
         
 #        default_filepath = os.path.join(Path.home(), "Dropbox", "KiCAD", "pcb.csv")
-        self.project_items = [ ["centroid_filepath", "centroid.csv"], 
-                               ["bom_filepath", "bom.csv" ], 
-                               ["package_alias_filepath", "package_alias.csv" ] ]
+        #project items as [[name, default_value, type]]
+        self.project_items = [ ["centroid_filepath", "centroid.csv", "str"], 
+                               ["bom_filepath", "bom.csv", "str" ], 
+                               ["package_alias_filepath", "package_alias.csv", "str" ],
+                               ["flip_bottom", True, "bool"],
+                               ["reverse_bottom", True, "bool"] ]
         
         self.preprocessor_config_path = os.path.join(PROJECT_PATH, "preprocessor_config.ini")
         
@@ -38,14 +41,16 @@ class PreprocessorApp:
     def reload_project(self, project_config_filepath):
         #Set project config defaults
         self.project_config = configparser.ConfigParser()
-
         self.project_config['SETTINGS'] = {}
          
         #set project defaults
         for project_item in self.project_items:
             setting_name = project_item[0]
             setting_default = project_item[1]
-            self.project_config['SETTINGS'][setting_name] = setting_default
+            if project_item[2] == "bool":
+              self.project_config['SETTINGS'][setting_name] = str(setting_default)
+            else:
+              self.project_config['SETTINGS'][setting_name] = setting_default
          
         #Read the project
         self.project_config.read(project_config_filepath)
@@ -55,13 +60,7 @@ class PreprocessorApp:
             setting_value = self.project_config['SETTINGS'][setting_name]
             gui_entry = self.builder.tkvariables[project_item[0]]
             gui_entry.set(setting_value)
-
-        flip_bottom_checkbox = self.builder.tkvariables['flip_bottom']        
-        flip_bottom = flip_bottom_checkbox.set(True)          
-
-        reverse_bottom_checkbox = self.builder.tkvariables['reverse_bottom']        
-        reverse_bottom = reverse_bottom_checkbox.set(True)      
-
+ 
         self.project_config_filepath = project_config_filepath
         self.builder.tkvariables['project_config_filepath'].set(project_config_filepath)
 
@@ -205,7 +204,7 @@ class PreprocessorApp:
         for project_item in self.project_items:
           var_name = project_item[0]
           gui_value = self.builder.tkvariables[var_name].get()
-          self.project_config["SETTINGS"][var_name] = gui_value
+          self.project_config["SETTINGS"][var_name] = str(gui_value)
           
         project_filepath = self.preprocessor_config['PROJECT']["config_filepath"]
         with open(project_filepath, "w") as project_file:
