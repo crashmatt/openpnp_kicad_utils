@@ -6,7 +6,8 @@ from pathlib import Path
 import configparser
 from optparse import OptionParser
 from pnp_preprocessor import PartPositions
-from OpenPnPParts import *
+from Aliases import Aliases
+import Bom
 
 PROJECT_PATH = os.path.dirname(__file__)
 PROJECT_UI = os.path.join(PROJECT_PATH, "Preprocessor.ui")
@@ -28,7 +29,8 @@ class PreprocessorApp:
                                ["part_alias_filepath", "part_alias.csv", "str" ],
                                ["flip_bottom", True, "bool"],
                                ["reverse_bottom", True, "bool"],
-                               ["auto_outfile_name", True, "bool"]  ]
+                               ["auto_outfile_name", True, "bool"],
+                               ["part_alias", False, "bool"]]
         
         self.preprocessor_config_path = os.path.join(PROJECT_PATH, "preprocessor_config.ini")
         
@@ -214,14 +216,20 @@ class PreprocessorApp:
             messagebox("ERROR: attempting to use alias file as input")
             return      
           
-        flip_bottom_checkbox = self.builder.tkvariables['flip_bottom']        
-        flip_bottom = flip_bottom_checkbox.get()          
+        flip_bottom = self.builder.tkvariables['flip_bottom'].get()
+        reverse_bottom = self.builder.tkvariables['reverse_bottom'].get()
 
-        reverse_bottom_checkbox = self.builder.tkvariables['reverse_bottom']        
-        reverse_bottom = reverse_bottom_checkbox.get()         
+        part_alias = self.builder.tkvariables['part_alias'].get()
+        
+        part_aliases = None
+        if part_alias:
+            part_alias_filepath = self.builder.tkvariables['part_alias_filepath'].get()
+            part_alias_filepath = self.make_project_abs_path(part_alias_filepath)
+            part_aliases = Aliases(part_alias_filepath)
+  
 
-        package_alias_filepath = self.builder.tkvariables['package_alias_filepath'].get()     
-        package_alias_filepath = self.make_project_abs_path(package_alias_filepath)           
+        package_alias_filepath = self.builder.tkvariables['package_alias_filepath'].get()
+        package_alias_filepath = self.make_project_abs_path(package_alias_filepath)
         package_aliases = Aliases(package_alias_filepath)
         
         part_positions = PartPositions(centroid_filepath)
@@ -234,8 +242,17 @@ class PreprocessorApp:
           
           if not savefile_path:
             return
+          
+#         bom = None
+#         bom_part_heights = self.builder.tkvariables['bom_part_heights'].get()
+#         if bom_part_heights:
+#             bom_filepath = self.builder.tkvariables['bom_filepath'].get()
+#             bom_filepath = self.make_project_abs_path(bom_filepath)            
+#             bom = Bom()
+#             if not bom.loadCSV(bom_filepath):
+#               bom = None
         
-        part_positions.process(None, package_aliases, flip_bottom, reverse_bottom, new_pos_file_path)
+        part_positions.process(part_aliases, package_aliases, flip_bottom, reverse_bottom, new_pos_file_path)
                 
                 
     def run(self):

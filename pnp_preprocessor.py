@@ -140,7 +140,6 @@ class PartPositions():
       part_pos["PosX"] = str(new_pos[0])
       part_pos["PosY"] = str(new_pos[1])
     
-    
   def exportToCSV(self, new_pos_file_path):
     with open(new_pos_file_path, "w") as new_pos_fle:
       #write headers
@@ -182,7 +181,7 @@ class PartPositions():
       
     if reverse_bottom:
       self.reverseBottomRotation()
-    
+      
     self.exportToCSV(out_filepath)
       
 def main():
