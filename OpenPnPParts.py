@@ -37,6 +37,8 @@ from posix import mkdir
 import qrcode
 from math import ceil
 
+from Bom import *
+
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
@@ -186,7 +188,19 @@ class OpenPnPParts():
       part_path = os.path.join(qr_directory, part_filename)
 
       part["qrc_img"].save(part_path)
-      
+  
+  def filter_by_bom(self, bom):
+      bom_part_ids = []
+      for bom_item in bom.parts:
+        bom_part_id = bom_item.package + "-" + bom_item.value
+        bom_part_ids.append(bom_part_id)
+          
+      valid_parts = []
+      for part in self.parts:
+        part_id = part["@id"]
+        if part_id in bom_part_ids:
+          valid_parts.append(part)          
+      self.parts = valid_parts
    
 def main():
   open_pnp_parts = OpenPnPParts()

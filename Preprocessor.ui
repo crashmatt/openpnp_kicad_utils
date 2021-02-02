@@ -375,7 +375,7 @@
           <object class="tk.Checkbutton" id="checkbutton_qrc_bom">
             <property name="idtocommand">false</property>
             <property name="text" translatable="yes">QR Codes for BOM</property>
-            <property name="textvariable">string:qrc_bom_only</property>
+            <property name="variable">boolean:qrc_bom_only</property>
             <layout manager="grid">
               <property name="column">1</property>
               <property name="pady">5</property>
@@ -416,7 +416,7 @@
           <object class="tk.Checkbutton" id="checkbutton_generate_individual">
             <property name="idtocommand">false</property>
             <property name="text" translatable="yes">Individual QRC</property>
-            <property name="textvariable">string:qrc_individual_images</property>
+            <property name="variable">boolean:qrc_individual_images</property>
             <layout manager="grid">
               <property name="column">0</property>
               <property name="pady">5</property>

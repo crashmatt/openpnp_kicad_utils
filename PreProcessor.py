@@ -211,6 +211,18 @@ class PreprocessorApp:
         new_pos_file_path = Path(pos_file_path)
         new_pos_file_path = new_pos_file_path.with_name(new_pos_file_path_name)   
         return new_pos_file_path 
+      
+    def load_project_part_aliases(self):
+        part_alias_filepath = self.builder.tkvariables['part_alias_filepath'].get()
+        part_alias_filepath = self.make_project_abs_path(part_alias_filepath)
+        part_aliases = Aliases(part_alias_filepath)
+        return part_aliases
+                  
+    def load_project_package_aliases(self):
+        package_alias_filepath = self.builder.tkvariables['package_alias_filepath'].get()
+        package_alias_filepath = self.make_project_abs_path(package_alias_filepath)
+        package_aliases = Aliases(package_alias_filepath)
+        return package_aliases
               
     def callback_generate(self, event=None):
         centroid_filepath = self.builder.tkvariables['centroid_filepath'].get()
@@ -228,17 +240,12 @@ class PreprocessorApp:
         reverse_bottom = self.builder.tkvariables['reverse_bottom'].get()
 
         part_alias = self.builder.tkvariables['part_alias'].get()
-        
         part_aliases = None
+        
         if part_alias:
-            part_alias_filepath = self.builder.tkvariables['part_alias_filepath'].get()
-            part_alias_filepath = self.make_project_abs_path(part_alias_filepath)
-            part_aliases = Aliases(part_alias_filepath)
-  
+          part_aliases = self.load_project_part_aliases() 
 
-        package_alias_filepath = self.builder.tkvariables['package_alias_filepath'].get()
-        package_alias_filepath = self.make_project_abs_path(package_alias_filepath)
-        package_aliases = Aliases(package_alias_filepath)
+        package_aliases = self.load_project_package_aliases()
         
         part_positions = PartPositions(centroid_filepath)
         
@@ -261,6 +268,13 @@ class PreprocessorApp:
 #               bom = None
         
         part_positions.process(part_aliases, package_aliases, flip_bottom, reverse_bottom, new_pos_file_path)
+        
+    def load_project_bom(self):
+        bom = Bom()
+        bom_filepath = self.builder.tkvariables['bom_filepath'].get()
+        bom_filepath = self.make_project_abs_path(bom_filepath)
+        bom.loadCsv(bom_filepath)
+        return bom
        
     def callback_generate_qr_codes(self, event=None):
       open_pnp_parts = OpenPnPParts()
@@ -271,11 +285,12 @@ class PreprocessorApp:
         open_pnp_parts.saveQRCodeImages()
         
       if self.builder.tkvariables['qrc_bom_only'].get():
-          bom = Bom()
-          bom_filepath = self.builder.tkvariables['bom_filepath'].get()
-          bom_filepath = self.make_project_abs_path(bom_filepath)
-          bom.loadCsv(bom_filepath)
-          bom
+        package_aliases = self.load_project_package_aliases()
+             
+        bom = self.load_project_bom()              
+        bom.alias_packages(package_aliases.aliases)
+        open_pnp_parts.filter_by_bom(bom)        
+        
       open_pnp_parts.saveConcatenatedQRImage(self.builder.tkvariables['qrc_columns'].get(), self.project_directory());
                 
     def run(self):
