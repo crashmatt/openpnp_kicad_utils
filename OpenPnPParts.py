@@ -41,34 +41,12 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
-parts_filepath_default = Path(os.path.join(Path.home(), ".openpnp2", "parts.xml"))
-packages_filepath_default = Path(os.path.join(Path.home(), ".openpnp2", "packages.xml"))
-    
 
-class PackageAdjustments(): 
-  def __init__(self, adjustment_filepath):
-    #Read and parse adjustment file
-    with open(adjustment_filepath, "r") as adjustment_file:
-      adjustment_lines = adjustment_file.readlines()
-    
-    adjustments = {}
-    for adjustment_line in adjustment_lines:
-      alias_splits = adjustment_line.rstrip().split(",")
-      if len(alias_splits) >= 3:
-        package_id = str(alias_splits[0])
-        x_offset = float(alias_splits[1])
-        y_offset = float(alias_splits[2])
-        
-        adjustment = {}
-        adjustment["x_offset"] = x_offset
-        adjustment["y_offset"] = y_offset
-        adjustments[package_id] = adjustment
-          
-    self.adjustments = adjustments
-  
-    
+
 
 class OpenPnPParts():
+  parts_filepath_default = Path(os.path.join(Path.home(), ".openpnp2", "parts.xml"))
+  
   def __init__(self, parts_filepath=parts_filepath_default):
     with open(parts_filepath, "rb") as parts_file:
       parts_filedata = parts_file.read()
@@ -113,14 +91,14 @@ class OpenPnPParts():
       qrc_img = qrc_img.resize( (width, height) )
       part["qrc_img"] = qrc_img
       
-  def addQRCodeTitle(self, left=True, ttf_path="/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf"):
+  def addQRCodeTitle(self, left=True, ttf_path="/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf", font_size=16):
     text_margin = 0.05
     for part in self.parts:
       part_id = part["@id"]
       qrc_img = part["qrc_img"]
       qrc_width, qrc_height = qrc_img.size
       
-      font = ImageFont.truetype(ttf_path, 16)
+      font = ImageFont.truetype(ttf_path, font_size)
       textwidth, textheight = font.getsize(part_id)
       
       adj_text_width = int(textwidth * (1+2*text_margin))
@@ -182,13 +160,17 @@ class OpenPnPParts():
     return newimg
     
       
-  def saveConcatenatedQRImage(self, columns):
+  def saveConcatenatedQRImage(self, columns, directory=None):
     img = self.makeConcatenatedQRImage(columns)
-    qr_directory = os.path.join( os.getcwd(), "OpenPnpPartQRCodes")
-    if not os.path.exists(qr_directory):
-      os.mkdir(qr_directory)
+    if directory == None:
+      qr_directory = os.path.join( os.getcwd(), "OpenPnpPartQRCodes")
+      if not os.path.exists(qr_directory):
+        os.mkdir(qr_directory)
+    else:
+      qr_directory = directory
     part_path = os.path.join(qr_directory, "concatenated.png")
     img.save(part_path)
+
 
   def saveQRCodeImages(self):
     qr_directory = os.path.join( os.getcwd(), "OpenPnpPartQRCodes")
@@ -204,9 +186,7 @@ class OpenPnPParts():
       part_path = os.path.join(qr_directory, part_filename)
 
       part["qrc_img"].save(part_path)
-
-
-   
+      
    
 def main():
   open_pnp_parts = OpenPnPParts()

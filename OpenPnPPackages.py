@@ -28,7 +28,36 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
 
+import xmltodict
+from pathlib import Path
+import os
+
+class PackageAdjustments(): 
+  def __init__(self, adjustment_filepath):
+    #Read and parse adjustment file
+    with open(adjustment_filepath, "r") as adjustment_file:
+      adjustment_lines = adjustment_file.readlines()
+    
+    adjustments = {}
+    for adjustment_line in adjustment_lines:
+      alias_splits = adjustment_line.rstrip().split(",")
+      if len(alias_splits) >= 3:
+        package_id = str(alias_splits[0])
+        x_offset = float(alias_splits[1])
+        y_offset = float(alias_splits[2])
+        
+        adjustment = {}
+        adjustment["x_offset"] = x_offset
+        adjustment["y_offset"] = y_offset
+        adjustments[package_id] = adjustment
+          
+    self.adjustments = adjustments
+  
+    
+
 class OpenPnPPackages():
+  packages_filepath_default = Path(os.path.join(Path.home(), ".openpnp2", "packages.xml"))
+  
   '''
   classdocs
   '''  
@@ -50,7 +79,7 @@ class OpenPnPPackages():
     
     
 class OpenPnPPackagesXML():    
-  def __init__(self, packages_filepath=packages_filepath_default ):
+  def __init__(self, packages_filepath=OpenPnPPackages.packages_filepath_default ):
     self.packages_tree = etree.parse(str(packages_filepath))
     
     header_element = self.packages_tree.xpath("/openpnp-packages")

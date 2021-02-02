@@ -8,10 +8,11 @@ from optparse import OptionParser
 from pnp_preprocessor import PartPositions
 from Aliases import Aliases
 import Bom
+from OpenPnPPackages import *
+from OpenPnPParts import *
 
 PROJECT_PATH = os.path.dirname(__file__)
 PROJECT_UI = os.path.join(PROJECT_PATH, "Preprocessor.ui")
-
 
 class PreprocessorApp:
     def __init__(self, root):
@@ -30,7 +31,14 @@ class PreprocessorApp:
                                ["flip_bottom", True, "bool"],
                                ["reverse_bottom", True, "bool"],
                                ["auto_outfile_name", True, "bool"],
-                               ["part_alias", False, "bool"]]
+                               ["part_alias", False, "bool"],
+                               ["openpnp_parts_filepath", OpenPnPParts.parts_filepath_default, "str" ],
+                               ["openpnp_packages_filepath", OpenPnPPackages.packages_filepath_default, "str" ],
+                               ["qrc_columns", 3, "int"],
+                               ["qrc_scale", 0.5, "double"],
+                               ["qrc_bom_only", False, "bool"],
+                               ["qrc_individual_images", False, "bool"]]
+        
         
         self.preprocessor_config_path = os.path.join(PROJECT_PATH, "preprocessor_config.ini")
         
@@ -253,7 +261,22 @@ class PreprocessorApp:
 #               bom = None
         
         part_positions.process(part_aliases, package_aliases, flip_bottom, reverse_bottom, new_pos_file_path)
-                
+       
+    def callback_generate_qr_codes(self, event=None):
+      open_pnp_parts = OpenPnPParts()
+      open_pnp_parts.makeQRCodes()
+      open_pnp_parts.resizeQRCodes(self.builder.tkvariables['qrc_scale'].get())
+      open_pnp_parts.addQRCodeTitle()
+      if self.builder.tkvariables['qrc_individual_images'].get():
+        open_pnp_parts.saveQRCodeImages()
+        
+      if self.builder.tkvariables['qrc_bom_only'].get():
+          bom = Bom()
+          bom_filepath = self.builder.tkvariables['bom_filepath'].get()
+          bom_filepath = self.make_project_abs_path(bom_filepath)
+          bom.loadCsv(bom_filepath)
+          bom
+      open_pnp_parts.saveConcatenatedQRImage(self.builder.tkvariables['qrc_columns'].get(), self.project_directory());
                 
     def run(self):
         self.mainwindow.mainloop()

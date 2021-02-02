@@ -34,6 +34,7 @@ import tkinter.filedialog as filedialog
 import configparser
 from optparse import OptionParser
 import glob
+from Aliases import * 
 
 from OpenPnPParts import *
 
