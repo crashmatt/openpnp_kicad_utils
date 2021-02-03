@@ -22,7 +22,7 @@ class PreprocessorApp:
         self.mainwindow = builder.get_object('frame_pnp_preprocess')
         builder.connect_callbacks(self)
         
-#        default_filepath = os.path.join(Path.home(), "Dropbox", "KiCAD", "pcb.csv")
+        default_mod_filepath = os.path.join("library", "kicad_project.mod")
         #project items as [[name, default_value, type]]
         self.project_items = [ ["centroid_filepath", "centroid.csv", "str"], 
                                ["bom_filepath", "bom.csv", "str" ], 
@@ -37,7 +37,13 @@ class PreprocessorApp:
                                ["qrc_columns", 3, "int"],
                                ["qrc_scale", 0.5, "double"],
                                ["qrc_bom_only", False, "bool"],
-                               ["qrc_individual_images", False, "bool"]]
+                               ["kifoot2opnp_xinv", False, "bool"],
+                               ["kifoot2opnp_yinv", False, "bool"],
+                               ["kifoot2opnp_mark_pin1", True, "bool"],
+                               ["kifoot2opnp_backup", True, "bool"],
+                               ["mod_filepath", default_mod_filepath, "str" ]]
+        
+        
         
         
         self.preprocessor_config_path = os.path.join(PROJECT_PATH, "preprocessor_config.ini")
@@ -287,11 +293,27 @@ class PreprocessorApp:
       if self.builder.tkvariables['qrc_bom_only'].get():
         package_aliases = self.load_project_package_aliases()
              
-        bom = self.load_project_bom()              
+        bom = self.load_project_bom()
         bom.alias_packages(package_aliases.aliases)
-        open_pnp_parts.filter_by_bom(bom)        
+        open_pnp_parts.filter_by_bom(bom)
         
       open_pnp_parts.saveConcatenatedQRImage(self.builder.tkvariables['qrc_columns'].get(), self.project_directory());
+
+
+    def callback_select_kicad_mod(self, event=None):
+        mod_file_path = self.make_project_abs_path(self.builder.tkvariables['mod_filepath'].get())
+
+        mod_directory = mod_file_path.parent
+        mod_name = mod_file_path.name
+        
+        mod_file_path = filedialog.askopenfilename(filetypes=[("KiCAD mod file", ".mod")] , initialdir=mod_directory, initialfile=mod_name)
+      
+        if not mod_file_path:
+          return;
+        
+        mod_file_path = self.project_relative_path(mod_file_path)        
+        self.builder.tkvariables['mod_filepath'].set(mod_file_path)
+
                 
     def run(self):
         self.mainwindow.mainloop()

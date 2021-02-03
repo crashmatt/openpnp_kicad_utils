@@ -32,6 +32,9 @@ import xmltodict
 from pathlib import Path
 import os
 
+from lxml import etree
+import numpy as np
+
 class PackageAdjustments(): 
   def __init__(self, adjustment_filepath):
     #Read and parse adjustment file

@@ -188,7 +188,7 @@ class OpenPnPParts():
       part_path = os.path.join(qr_directory, part_filename)
 
       part["qrc_img"].save(part_path)
-  
+      
   def filter_by_bom(self, bom):
       bom_part_ids = []
       for bom_item in bom.parts:

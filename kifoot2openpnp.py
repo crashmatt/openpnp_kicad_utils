@@ -34,16 +34,13 @@ from tkinter import filedialog
 import configparser
 import glob
 from OpenPnPParts import *
+from OpenPnPPackages import *
 
 from optparse import OptionParser
 
 from pcb.kicad_mod import KicadMod
 
 
-
-
-      
-      
 def main():
     config = configparser.ConfigParser()
     
@@ -108,7 +105,7 @@ def main():
     if options.output_file != "":
       export_packages_path  = options.output_file
     else:
-      export_packages_path = Path(packages_filepath_default)
+      export_packages_path = Path(OpenPnPPackages.packages_filepath_default)
 #      export_packages_path = export_packages_path.with_name("kicad_export_packages.xml")
     
     if os.path.isfile(export_packages_path):
