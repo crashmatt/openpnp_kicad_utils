@@ -11,6 +11,8 @@ import Bom
 from OpenPnPPackages import *
 from OpenPnPParts import *
 
+from pcb.kicad_mod import KicadMod
+
 PROJECT_PATH = os.path.dirname(__file__)
 PROJECT_UI = os.path.join(PROJECT_PATH, "Preprocessor.ui")
 
@@ -24,27 +26,27 @@ class PreprocessorApp:
         
         default_mod_filepath = os.path.join("library", "kicad_project.mod")
         #project items as [[name, default_value, type]]
-        self.project_items = [ ["centroid_filepath", "centroid.csv", "str"], 
-                               ["bom_filepath", "bom.csv", "str" ], 
-                               ["package_alias_filepath", "package_alias.csv", "str" ],
-                               ["part_alias_filepath", "part_alias.csv", "str" ],
-                               ["flip_bottom", True, "bool"],
-                               ["reverse_bottom", True, "bool"],
-                               ["auto_outfile_name", True, "bool"],
-                               ["part_alias", False, "bool"],
-                               ["openpnp_parts_filepath", OpenPnPParts.parts_filepath_default, "str" ],
-                               ["openpnp_packages_filepath", OpenPnPPackages.packages_filepath_default, "str" ],
-                               ["qrc_columns", 3, "int"],
-                               ["qrc_scale", 0.5, "double"],
-                               ["qrc_bom_only", False, "bool"],
-                               ["kifoot2opnp_xinv", False, "bool"],
-                               ["kifoot2opnp_yinv", False, "bool"],
-                               ["kifoot2opnp_mark_pin1", True, "bool"],
-                               ["kifoot2opnp_backup", True, "bool"],
-                               ["mod_filepath", default_mod_filepath, "str" ]]
+        self.project_gui_items = [ ["centroid_filepath", "centroid.csv"], 
+                               ["bom_filepath", "bom.csv" ], 
+                               ["package_alias_filepath", "package_alias.csv" ],
+                               ["part_alias_filepath", "part_alias.csv" ],
+                               ["flip_bottom", True],
+                               ["reverse_bottom", True],
+                               ["auto_outfile_name", True],
+                               ["part_alias", False],
+                               ["openpnp_parts_filepath", OpenPnPParts.parts_filepath_default ],
+                               ["openpnp_packages_filepath", OpenPnPPackages.packages_filepath_default ],
+                               ["qrc_columns", 3],
+                               ["qrc_scale", 0.5],
+                               ["qrc_bom_only", False],
+                               ["kifoot2opnp_xinv", False],
+                               ["kifoot2opnp_yinv", False],
+                               ["kifoot2opnp_overwrite", False],
+                               ["marked_pins", "1,C,CATHODE,A1"],
+                               ["extents_layer", ""],
+                               ["kifoot2opnp_backup", True]]
         
-        
-        
+        self.project_items = { "mod_filepath": "*.kicad_mod" }
         
         self.preprocessor_config_path = os.path.join(PROJECT_PATH, "preprocessor_config.ini")
         
@@ -62,19 +64,25 @@ class PreprocessorApp:
         self.project_config['SETTINGS'] = {}
          
         #set project defaults
-        for project_item in self.project_items:
-            setting_name = project_item[0]
-            setting_default = project_item[1]
+        for project_gui_item in self.project_gui_items:
+            setting_name = project_gui_item[0]
+            setting_default = project_gui_item[1]
             self.project_config['SETTINGS'][setting_name] = str(setting_default)
+
+        for project_item_key in self.project_items.keys():
+            self.project_config['SETTINGS'][project_item_key] = str(self.project_items[project_item_key])
          
         #Read the project
         self.project_config.read(project_config_filepath)
                 
-        for project_item in self.project_items:
-            setting_name = project_item[0]
+        for project_gui_item in self.project_gui_items:
+            setting_name = project_gui_item[0]
             setting_value = self.project_config['SETTINGS'][setting_name]
-            gui_entry = self.builder.tkvariables[project_item[0]]
+            gui_entry = self.builder.tkvariables[project_gui_item[0]]
             gui_entry.set(setting_value)
+
+        for project_item_key in self.project_items.keys():
+            self.project_items[project_item_key] = self.project_config['SETTINGS'][project_item_key]
  
         self.project_config_filepath = project_config_filepath
         self.builder.tkvariables['project_config_filepath'].set(project_config_filepath)
@@ -201,10 +209,13 @@ class PreprocessorApp:
               
 
     def callback_save_project(self, event=None):        
-        for project_item in self.project_items:
-          var_name = project_item[0]
+        for project_gui_item in self.project_gui_items:
+          var_name = project_gui_item[0]
           gui_value = self.builder.tkvariables[var_name].get()
           self.project_config["SETTINGS"][var_name] = str(gui_value)
+
+        for project_item_key in self.project_items.keys():
+          self.project_config["SETTINGS"][project_item_key] = str(self.project_items[project_item_key])
           
         project_filepath = self.preprocessor_config['PROJECT']["config_filepath"]
         with open(project_filepath, "w") as project_file:
@@ -300,19 +311,41 @@ class PreprocessorApp:
       open_pnp_parts.saveConcatenatedQRImage(self.builder.tkvariables['qrc_columns'].get(), self.project_directory());
 
 
-    def callback_select_kicad_mod(self, event=None):
-        mod_file_path = self.make_project_abs_path(self.builder.tkvariables['mod_filepath'].get())
+    def callback_kifoot2openpnp(self, event=None):
+        mod_file_path = self.make_project_abs_path(self.project_items['mod_filepath'])
 
         mod_directory = mod_file_path.parent
         mod_name = mod_file_path.name
         
-        mod_file_path = filedialog.askopenfilename(filetypes=[("KiCAD mod file", ".mod")] , initialdir=mod_directory, initialfile=mod_name)
+        mod_file_paths = filedialog.askopenfilenames(filetypes=[("KiCAD mod file", ".mod")] , initialdir=mod_directory, initialfile=mod_name)
       
-        if not mod_file_path:
+        if len(mod_file_paths) == 0:
           return;
         
-        mod_file_path = self.project_relative_path(mod_file_path)        
-        self.builder.tkvariables['mod_filepath'].set(mod_file_path)
+        #Remember the first selection as the default in the project
+        self.project_items['mod_filepath'] = self.project_relative_path(mod_file_paths[0])
+
+        packages = OpenPnPPackagesXML()
+        invert_xpos = self.builder.tkvariables['kifoot2opnp_xinv'].get()
+        invert_ypos = self.builder.tkvariables['kifoot2opnp_yinv'].get()
+        backup = self.builder.tkvariables['kifoot2opnp_backup'].get()
+        overwrite = self.builder.tkvariables['kifoot2opnp_overwrite'].get()
+        
+        marked_pins = self.builder.tkvariables['marked_pins'].get()
+        marked_pin_names = marked_pins.split(",")
+        
+        package_aliases = self.load_project_package_aliases().aliases
+      
+        for kicadmod_file_path in mod_file_paths: 
+            rel_mod_file_path = self.project_relative_path(mod_file_path)        
+            
+            kicadmod = KicadMod(kicadmod_file_path)
+            packages.insertKiCadModPads(kicadmod, 
+                                      invert_xpos=invert_xpos ,
+                                      invert_ypos=invert_ypos ,
+                                      overwrite = overwrite,
+                                      package_alias=package_aliases,
+                                      marked_pin_names=marked_pin_names)
 
                 
     def run(self):

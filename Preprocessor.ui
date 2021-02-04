@@ -1,14 +1,14 @@
 <?xml version='1.0' encoding='utf-8'?>
 <interface version="1.0">
   <object class="tk.Frame" id="frame_pnp_preprocess">
-    <property name="height">400</property>
+    <property name="height">1080</property>
     <property name="relief">flat</property>
-    <property name="text" translatable="yes">centroid_filepath.csv</property>
+    <property name="text" translatable="yes">1,C,CATHODE,A1</property>
     <property name="width">300</property>
     <layout manager="grid">
       <property name="column">0</property>
       <property name="propagate">True</property>
-      <property name="row">2</property>
+      <property name="row">10</property>
     </layout>
     <child>
       <object class="tk.Frame" id="frame_centroid">
@@ -19,7 +19,7 @@
           <property name="columnspan">2</property>
           <property name="pady">10</property>
           <property name="propagate">True</property>
-          <property name="row">57</property>
+          <property name="row">10</property>
         </layout>
         <child>
           <object class="tk.Button" id="button_centroid">
@@ -211,7 +211,7 @@
           <property name="columnspan">2</property>
           <property name="pady">10</property>
           <property name="propagate">True</property>
-          <property name="row">58</property>
+          <property name="row">50</property>
         </layout>
         <child>
           <object class="tk.Label" id="label_qr_columns">
@@ -249,7 +249,7 @@
             <bind sequence="&lt;1&gt;" handler="callback_generate_qr_codes" add="" />
             <layout manager="grid">
               <property name="column">0</property>
-              <property name="columnspan">2</property>
+              <property name="columnspan">3</property>
               <property name="pady">10</property>
               <property name="propagate">True</property>
               <property name="row">10</property>
@@ -262,10 +262,10 @@
             <property name="text" translatable="yes">QR Codes for BOM</property>
             <property name="variable">boolean:qrc_bom_only</property>
             <layout manager="grid">
-              <property name="column">1</property>
+              <property name="column">2</property>
               <property name="pady">5</property>
               <property name="propagate">True</property>
-              <property name="row">5</property>
+              <property name="row">3</property>
             </layout>
           </object>
         </child>
@@ -303,10 +303,10 @@
             <property name="text" translatable="yes">Individual QRC</property>
             <property name="variable">boolean:qrc_individual_images</property>
             <layout manager="grid">
-              <property name="column">0</property>
+              <property name="column">2</property>
               <property name="pady">5</property>
               <property name="propagate">True</property>
-              <property name="row">5</property>
+              <property name="row">1</property>
             </layout>
           </object>
         </child>
@@ -321,31 +321,121 @@
           <property name="columnspan">2</property>
           <property name="pady">10</property>
           <property name="propagate">True</property>
-          <property name="row">60</property>
+          <property name="row">40</property>
         </layout>
         <child>
-          <object class="tk.Entry" id="entry_mod_filepath">
-            <property name="justify">left</property>
-            <property name="state">readonly</property>
-            <property name="text" translatable="yes">kicad._project.mod</property>
-            <property name="textvariable">string:mod_filepath</property>
-            <property name="width">80</property>
+          <object class="tk.Frame" id="frame_6">
+            <property name="height">200</property>
+            <property name="width">200</property>
             <layout manager="grid">
-              <property name="column">1</property>
+              <property name="column">0</property>
+              <property name="columnspan">2</property>
+              <property name="propagate">True</property>
+              <property name="row">1</property>
+            </layout>
+            <child>
+              <object class="tk.Checkbutton" id="checkbutton_kifoot2opnp_xinv">
+                <property name="idtocommand">false</property>
+                <property name="text" translatable="yes">X Invert</property>
+                <property name="variable">boolean:kifoot2opnp_xinv</property>
+                <layout manager="grid">
+                  <property name="padx">20</property>
+                  <property name="pady">5</property>
+                  <property name="propagate">True</property>
+                  <property name="row">1</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="tk.Checkbutton" id="checkbutton_kifoot2opnp_yinv">
+                <property name="idtocommand">false</property>
+                <property name="text" translatable="yes">Y invert</property>
+                <property name="variable">boolean:kifoot2opnp_yinv</property>
+                <layout manager="grid">
+                  <property name="column">1</property>
+                  <property name="padx">20</property>
+                  <property name="propagate">True</property>
+                  <property name="row">1</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="tk.Checkbutton" id="checkbutton_kifoot2opnp_no_backup">
+                <property name="idtocommand">false</property>
+                <property name="text" translatable="yes">Backup</property>
+                <property name="variable">boolean:kifoot2opnp_backup</property>
+                <layout manager="grid">
+                  <property name="column">3</property>
+                  <property name="propagate">True</property>
+                  <property name="row">1</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="tk.Checkbutton" id="checkbutton_overwrite">
+                <property name="idtocommand">false</property>
+                <property name="text" translatable="yes">Overwrite</property>
+                <property name="variable">boolean:kifoot2opnp_overwrite</property>
+                <layout manager="grid">
+                  <property name="column">4</property>
+                  <property name="padx">10</property>
+                  <property name="propagate">True</property>
+                  <property name="row">1</property>
+                </layout>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="tk.Label" id="label_marked_pin_list">
+            <property name="text" translatable="yes">Marked pin list</property>
+            <layout manager="grid">
+              <property name="column">0</property>
               <property name="pady">5</property>
               <property name="propagate">True</property>
+              <property name="row">10</property>
+              <property name="sticky">e</property>
             </layout>
           </object>
         </child>
         <child>
-          <object class="tk.Button" id="button_kicad_modfile">
-            <property name="idtocommand">false</property>
-            <property name="text" translatable="yes">KiCAD .mod</property>
-            <property name="width">15</property>
-            <bind sequence="&lt;1&gt;" handler="callback_select_kicad_mod" add="" />
+          <object class="tk.Entry" id="entry_marked_pins">
+            <property name="text" translatable="yes">marked_pins</property>
+            <property name="textvariable">string:marked_pins</property>
+            <property name="validate">none</property>
+            <property name="width">50</property>
             <layout manager="grid">
+              <property name="column">1</property>
+              <property name="padx">10</property>
               <property name="propagate">True</property>
-              <property name="row">0</property>
+              <property name="row">10</property>
+              <property name="sticky">w</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="tk.Label" id="label_extents_layer">
+            <property name="text" translatable="yes">Extents layer</property>
+            <layout manager="grid">
+              <property name="column">0</property>
+              <property name="pady">5</property>
+              <property name="propagate">True</property>
+              <property name="row">15</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="tk.Entry" id="entry_extents_layer">
+            <property name="text" translatable="yes">extents_layer</property>
+            <property name="textvariable">string:extents_layer</property>
+            <property name="validate">none</property>
+            <property name="width">20</property>
+            <layout manager="grid">
+              <property name="column">1</property>
+              <property name="padx">10</property>
+              <property name="propagate">True</property>
+              <property name="row">15</property>
+              <property name="sticky">w</property>
             </layout>
           </object>
         </child>
@@ -361,62 +451,6 @@
               <property name="pady">10</property>
               <property name="propagate">True</property>
               <property name="row">20</property>
-            </layout>
-          </object>
-        </child>
-        <child>
-          <object class="tk.Checkbutton" id="checkbutton_kifoot2opnp_xinv">
-            <property name="idtocommand">false</property>
-            <property name="text" translatable="yes">X Invert</property>
-            <property name="variable">boolean:kifoot2opnp_xinv</property>
-            <layout manager="grid">
-              <property name="column">1</property>
-              <property name="pady">5</property>
-              <property name="propagate">True</property>
-              <property name="row">10</property>
-              <property name="sticky">w</property>
-            </layout>
-          </object>
-        </child>
-        <child>
-          <object class="tk.Checkbutton" id="checkbutton_kifoot2opnp_yinv">
-            <property name="idtocommand">false</property>
-            <property name="text" translatable="yes">Y invert</property>
-            <property name="variable">boolean:kifoot2opnp_yinv</property>
-            <layout manager="grid">
-              <property name="column">1</property>
-              <property name="pady">5</property>
-              <property name="propagate">True</property>
-              <property name="row">11</property>
-              <property name="sticky">w</property>
-            </layout>
-          </object>
-        </child>
-        <child>
-          <object class="tk.Checkbutton" id="checkbutton_kifoot2opnp_mark">
-            <property name="idtocommand">false</property>
-            <property name="text" translatable="yes">Mark pin 1</property>
-            <property name="variable">boolean:kifoot2opnp_mark_pin1</property>
-            <layout manager="grid">
-              <property name="column">1</property>
-              <property name="pady">5</property>
-              <property name="propagate">True</property>
-              <property name="row">12</property>
-              <property name="sticky">w</property>
-            </layout>
-          </object>
-        </child>
-        <child>
-          <object class="tk.Checkbutton" id="checkbutton_kifoot2opnp_no_backup">
-            <property name="idtocommand">false</property>
-            <property name="text" translatable="yes">Backup</property>
-            <property name="variable">boolean:kifoot2opnp_backup</property>
-            <layout manager="grid">
-              <property name="column">1</property>
-              <property name="pady">5</property>
-              <property name="propagate">True</property>
-              <property name="row">13</property>
-              <property name="sticky">w</property>
             </layout>
           </object>
         </child>
