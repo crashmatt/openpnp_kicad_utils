@@ -44,8 +44,6 @@ from PIL import ImageDraw
 from PIL import ImageFont
 
 
-
-
 class OpenPnPParts():
   parts_filepath_default = Path(os.path.join(Path.home(), ".openpnp2", "parts.xml"))
   
@@ -190,17 +188,27 @@ class OpenPnPParts():
       part["qrc_img"].save(part_path)
       
   def filter_by_bom(self, bom):
-      bom_part_ids = []
+      valid_parts = []
       for bom_item in bom.parts:
         bom_part_id = bom_item.package + "-" + bom_item.value
-        bom_part_ids.append(bom_part_id)
+        if bom_part_id in self.part_id_dict.keys():
+          valid_parts.append(self.part_id_dict[bom_part_id])
           
-      valid_parts = []
-      for part in self.parts:
-        part_id = part["@id"]
-        if part_id in bom_part_ids:
-          valid_parts.append(part)          
       self.parts = valid_parts
+      
+      
+  def bomToPartHeights(self, bom, overwrite):
+      for bom_item in bom.parts:
+        #Only set height if bom value is set
+        if bom_item.height != "0.0":
+          bom_part_id = bom_item.package + "-" + bom_item.value
+          if bom_part_id in self.part_id_dict.keys():
+            part = self.part_id_dict[bom_part_id]
+            part_height = part["@height"]
+            if overwrite or part_height == "0.0":
+                part["@height"] = bom_item.height
+            
+      
    
 def main():
   open_pnp_parts = OpenPnPParts()

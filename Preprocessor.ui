@@ -372,13 +372,14 @@
               </object>
             </child>
             <child>
-              <object class="tk.Checkbutton" id="checkbutton_overwrite">
+              <object class="tk.Checkbutton" id="checkbutton_overwrite_footprint">
                 <property name="idtocommand">false</property>
                 <property name="text" translatable="yes">Overwrite</property>
                 <property name="variable">boolean:kifoot2opnp_overwrite</property>
                 <layout manager="grid">
                   <property name="column">4</property>
                   <property name="padx">10</property>
+                  <property name="pady">5</property>
                   <property name="propagate">True</property>
                   <property name="row">1</property>
                 </layout>
@@ -511,7 +512,7 @@
         <child>
           <object class="tk.Entry" id="entry_openpnp_parts_filepath">
             <property name="state">readonly</property>
-            <property name="text" translatable="yes">openpn_parts_filepath</property>
+            <property name="text" translatable="yes">openpnp_parts_filepath</property>
             <property name="textvariable">string:openpnp_parts_filepath</property>
             <property name="width">80</property>
             <layout manager="grid">
@@ -582,6 +583,77 @@
             </layout>
           </object>
         </child>
+      </object>
+    </child>
+    <child>
+      <object class="tk.Frame" id="frame_1">
+        <property name="height">200</property>
+        <property name="width">200</property>
+        <layout manager="grid">
+          <property name="column">0</property>
+          <property name="columnspan">2</property>
+          <property name="pady">10</property>
+          <property name="propagate">True</property>
+          <property name="row">15</property>
+        </layout>
+        <child>
+          <object class="tk.Button" id="button_set_part_heights">
+            <property name="idtocommand">false</property>
+            <property name="text" translatable="yes">PART HEIGHTS FROM BOM</property>
+            <property name="width">50</property>
+            <bind sequence="&lt;1&gt;" handler="callback_set_part_heights" add="" />
+            <layout manager="grid">
+              <property name="column">0</property>
+              <property name="columnspan">2</property>
+              <property name="pady">10</property>
+              <property name="propagate">True</property>
+              <property name="row">1</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="tk.Checkbutton" id="checkbutton_overwrite_part_height">
+            <property name="idtocommand">false</property>
+            <property name="text" translatable="yes">Overwrite</property>
+            <property name="variable">boolean:overwrite_part_height</property>
+            <layout manager="grid">
+              <property name="column">0</property>
+              <property name="padx">10</property>
+              <property name="propagate">True</property>
+              <property name="row">0</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="tk.Checkbutton" id="checkbutton_ask_overwrite_part_height">
+            <property name="idtocommand">false</property>
+            <property name="text" translatable="yes">Ask overwrite</property>
+            <property name="textvariable">double:ask_overwrite</property>
+            <property name="variable">boolean:ask_overwrite_part_height</property>
+            <layout manager="grid">
+              <property name="column">1</property>
+              <property name="padx">10</property>
+              <property name="propagate">True</property>
+              <property name="row">0</property>
+            </layout>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="tk.Entry" id="entry_status">
+        <property name="justify">center</property>
+        <property name="state">readonly</property>
+        <property name="text" translatable="yes">status</property>
+        <property name="textvariable">string:status</property>
+        <property name="width">40</property>
+        <layout manager="grid">
+          <property name="column">0</property>
+          <property name="columnspan">2</property>
+          <property name="pady">10</property>
+          <property name="propagate">True</property>
+          <property name="row">60</property>
+        </layout>
       </object>
     </child>
   </object>

@@ -44,7 +44,10 @@ class PreprocessorApp:
                                ["kifoot2opnp_overwrite", False],
                                ["marked_pins", "1,C,CATHODE,A1"],
                                ["extents_layer", ""],
+                               ["overwrite_part_height", False],
+                               ["ask_overwrite_part_height", True],
                                ["kifoot2opnp_backup", True]]
+        
         
         self.project_items = { "mod_filepath": "*.kicad_mod" }
         
@@ -57,6 +60,11 @@ class PreprocessorApp:
         
         self.reload_project(self.preprocessor_config['PROJECT']["config_filepath"])
         
+        root.update()
+        w = root.winfo_width()
+        h = root.winfo_height()
+        self.dimensions = str(w) + "x" + str(h)
+        self.builder.tkvariables['status'].set(self.dimensions)
         
     def reload_project(self, project_config_filepath):
         #Set project config defaults
@@ -347,6 +355,15 @@ class PreprocessorApp:
                                       package_alias=package_aliases,
                                       marked_pin_names=marked_pin_names)
 
+    def callback_set_part_heights(self, event=None):
+        rel_parts_file_path = self.make_project_abs_path(self.builder.tkvariables['openpnp_parts_filepath'].get())  
+        parts = OpenPnPParts(rel_parts_file_path)
+        
+        bom = self.load_project_bom()
+        package_aliases = self.load_project_package_aliases()
+        bom.alias_packages(package_aliases.aliases)
+        
+        parts.bomToPartHeights(bom, False)
                 
     def run(self):
         self.mainwindow.mainloop()
