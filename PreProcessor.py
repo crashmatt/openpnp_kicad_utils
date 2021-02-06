@@ -46,7 +46,8 @@ class PreprocessorApp:
                                ["extents_layer", ""],
                                ["overwrite_part_height", False],
                                ["ask_overwrite_part_height", True],
-                               ["kifoot2opnp_backup", True]]
+                               ["kifoot2opnp_backup", True],
+                               ["backup_parts_file", True]]
         
         
         self.project_items = { "mod_filepath": "*.kicad_mod" }

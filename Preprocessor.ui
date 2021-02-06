@@ -16,7 +16,6 @@
         <property name="width">200</property>
         <layout manager="grid">
           <property name="column">0</property>
-          <property name="columnspan">2</property>
           <property name="pady">10</property>
           <property name="propagate">True</property>
           <property name="row">10</property>
@@ -208,7 +207,6 @@
         <property name="width">200</property>
         <layout manager="grid">
           <property name="column">0</property>
-          <property name="columnspan">2</property>
           <property name="pady">10</property>
           <property name="propagate">True</property>
           <property name="row">50</property>
@@ -318,7 +316,6 @@
         <property name="width">200</property>
         <layout manager="grid">
           <property name="column">0</property>
-          <property name="columnspan">2</property>
           <property name="pady">10</property>
           <property name="propagate">True</property>
           <property name="row">40</property>
@@ -362,6 +359,7 @@
             <child>
               <object class="tk.Checkbutton" id="checkbutton_kifoot2opnp_no_backup">
                 <property name="idtocommand">false</property>
+                <property name="state">disabled</property>
                 <property name="text" translatable="yes">Backup</property>
                 <property name="variable">boolean:kifoot2opnp_backup</property>
                 <layout manager="grid">
@@ -463,7 +461,6 @@
         <property name="width">200</property>
         <layout manager="grid">
           <property name="column">0</property>
-          <property name="columnspan">2</property>
           <property name="pady">10</property>
           <property name="propagate">True</property>
           <property name="row">0</property>
@@ -591,7 +588,6 @@
         <property name="width">200</property>
         <layout manager="grid">
           <property name="column">0</property>
-          <property name="columnspan">2</property>
           <property name="pady">10</property>
           <property name="propagate">True</property>
           <property name="row">15</property>
@@ -604,7 +600,7 @@
             <bind sequence="&lt;1&gt;" handler="callback_set_part_heights" add="" />
             <layout manager="grid">
               <property name="column">0</property>
-              <property name="columnspan">2</property>
+              <property name="columnspan">3</property>
               <property name="pady">10</property>
               <property name="propagate">True</property>
               <property name="row">1</property>
@@ -633,6 +629,19 @@
             <layout manager="grid">
               <property name="column">1</property>
               <property name="padx">10</property>
+              <property name="propagate">True</property>
+              <property name="row">0</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="tk.Checkbutton" id="checkbutton_backup_parts_file">
+            <property name="idtocommand">false</property>
+            <property name="state">disabled</property>
+            <property name="text" translatable="yes">Backup parts file</property>
+            <property name="variable">boolean:backup_parts_file</property>
+            <layout manager="grid">
+              <property name="column">2</property>
               <property name="propagate">True</property>
               <property name="row">0</property>
             </layout>
