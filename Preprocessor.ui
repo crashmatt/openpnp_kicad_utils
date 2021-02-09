@@ -665,5 +665,17 @@
         </layout>
       </object>
     </child>
+    <child>
+      <object class="ttk.Treeview" id="treeview_data">
+        <property name="height">45</property>
+        <property name="selectmode">extended</property>
+        <layout manager="grid">
+          <property name="column">2</property>
+          <property name="propagate">True</property>
+          <property name="row">0</property>
+          <property name="rowspan">60</property>
+        </layout>
+      </object>
+    </child>
   </object>
 </interface>

@@ -2,6 +2,8 @@ import os
 import pygubu
 import tkinter.filedialog as filedialog
 import tkinter.messagebox as messagebox
+from tkinter import ttk
+
 from pathlib import Path
 import configparser
 from optparse import OptionParser
@@ -96,6 +98,7 @@ class PreprocessorApp:
         self.project_config_filepath = project_config_filepath
         self.builder.tkvariables['project_config_filepath'].set(project_config_filepath)
 
+        self.show_parts()
 
     def project_directory(self):
       return str(Path(self.project_config_filepath).parent)
@@ -160,6 +163,8 @@ class PreprocessorApp:
         bom_file_path = self.project_relative_path(bom_file_path)
         
         self.builder.tkvariables['bom_filepath'].set(bom_file_path)
+        
+        self.show_parts()
 
     def callback_set_project_filepath(self, event=None):
         project_path = Path(self.project_config_filepath)
@@ -200,6 +205,8 @@ class PreprocessorApp:
         alias_file_path = self.project_relative_path(alias_file_path)
                 
         self.builder.tkvariables['package_alias_filepath'].set(alias_file_path)
+        
+        self.show_parts()
 
     def callback_select_part_alias(self, event=None):
         alias_file_path = self.make_project_abs_path(self.builder.tkvariables['part_alias_filepath'].get())
@@ -215,6 +222,8 @@ class PreprocessorApp:
         alias_file_path = self.project_relative_path(alias_file_path)
                 
         self.builder.tkvariables['part_alias_filepath'].set(alias_file_path)
+        
+        self.show_parts()
               
 
     def callback_save_project(self, event=None):        
@@ -355,16 +364,49 @@ class PreprocessorApp:
                                       overwrite = overwrite,
                                       package_alias=package_aliases,
                                       marked_pin_names=marked_pin_names)
-
-    def callback_set_part_heights(self, event=None):
+            
+    def show_parts(self):
         rel_parts_file_path = self.make_project_abs_path(self.builder.tkvariables['openpnp_parts_filepath'].get())  
-        parts = OpenPnPParts(rel_parts_file_path)
-        
+        opnp_parts = OpenPnPParts(rel_parts_file_path)
+
         bom = self.load_project_bom()
         package_aliases = self.load_project_package_aliases()
         bom.alias_packages(package_aliases.aliases)
+
+        treeview_data = self.builder.get_object("treeview_data")
+        for i in treeview_data.get_children():
+            treeview_data.delete(i)
         
-        parts.bomToPartHeights(bom, False)
+        treeview_data["columns"]=("old","new", "action")
+        
+        treeview_data.column("#0", width=450, minwidth=450, stretch=tk.NO)
+        treeview_data.column("old", width=50, minwidth=40, stretch=tk.NO)
+        treeview_data.column("new", width=50, minwidth=40, stretch=tk.NO)
+        treeview_data.column("action", width=60, minwidth=60, stretch=tk.NO)
+
+        treeview_data.heading("#0",text="Part",anchor=tk.CENTER)
+        treeview_data.heading("old", text="Old",anchor=tk.CENTER)
+        treeview_data.heading("new", text="New",anchor=tk.CENTER)
+        treeview_data.heading("action", text="Action",anchor=tk.CENTER)
+        
+        for part_idx, part_id in enumerate(opnp_parts.part_id_dict.keys()):
+          part = opnp_parts.part_id_dict[part_id]
+          part_height = part["@height"]
+          bom_part_height = "0.0"
+          replace = "Keep"
+          for bom_item in bom.parts:
+            bom_part_id = bom_item.package + "-" + bom_item.value
+            if bom_part_id == part_id:
+              bom_part_height = bom_item.height
+              if bom_part_height != "0.0" and part_height == "0.0":
+                replace = "Replace"
+              
+          treeview_data.insert("", part_idx+1, text=part_id, values=(part_height, bom_part_height, replace))
+        
+
+#     def callback_set_part_heights(self, event=None):                      
+#         opnp_parts.bomToPartHeights(bom, False)
+        
                 
     def run(self):
         self.mainwindow.mainloop()
