@@ -9,6 +9,21 @@ class BomItem():
     self.value = value
     self.package = package
     self.height = height
+    
+    self.package_alias = ""
+    self.part_alias = ""
+  
+  def get_openpnp_name(self):
+    package = self.package
+    part = self.value
+    
+    if self.package_alias != "":
+      package = self.package_alias
+
+    if self.part_alias != "":
+      part = self.part_alias
+
+    return part + "-" + package
 
 
 class Bom(object):
@@ -79,6 +94,6 @@ class Bom(object):
     def alias_packages(self, aliases):
         for part in self.parts:
           if part.package in aliases.keys():
-            part.package = aliases[part.package]
+            part.package_alias = aliases[part.package]
         
         

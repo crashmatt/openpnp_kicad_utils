@@ -7,7 +7,7 @@ from tkinter import ttk
 from pathlib import Path
 import configparser
 from optparse import OptionParser
-from pnp_preprocessor import PartPositions
+from KiCentroid import *
 from Aliases import Aliases
 import Bom
 from OpenPnPPackages import *
@@ -68,6 +68,23 @@ class PreprocessorApp:
         h = root.winfo_height()
         self.dimensions = str(w) + "x" + str(h)
         self.builder.tkvariables['status'].set(self.dimensions)
+
+        
+    def get_project_setting(self, setting_id, is_path=False):
+        setting = (self.project_config['SETTINGS'][setting_id])
+        if not is_path:
+          return setting
+        return self.make_project_abs_path(setting)
+        
+    def set_project_setting(self, setting_id, value, is_path=False, gui_var=True):
+        setting_value = value
+        if is_path:
+          setting_value = self.project_relative_path(setting_value)
+
+        self.project_config['SETTINGS'][setting_id] = setting_value
+        if gui_var:
+          self.builder.tkvariables[setting_id].set(setting_value)
+        
         
     def reload_project(self, project_config_filepath):
         #Set project config defaults
@@ -100,6 +117,10 @@ class PreprocessorApp:
 
         self.show_parts()
 
+    def load_openpnp_parts(self):
+        openpnp_parts_filepath = self.make_project_abs_path(self.project_config['SETTINGS']["openpnp_parts_filepath"])  
+        return OpenPnPParts(openpnp_parts_filepath)
+        
     def project_directory(self):
       return str(Path(self.project_config_filepath).parent)
 
@@ -121,7 +142,7 @@ class PreprocessorApp:
       
                                
     def callback_select_centroid_file(self, event=None):
-        pos_file_path = self.make_project_abs_path(self.builder.tkvariables['centroid_filepath'].get())
+        pos_file_path = self.get_project_setting("centroid_filepath", True)
           
         posfile_directory = pos_file_path.parent
         posfile_name = pos_file_path.name
@@ -130,9 +151,7 @@ class PreprocessorApp:
       
         if not pos_file_path:
           return;
-        
-        pos_file_path = self.project_relative_path(pos_file_path)
-        
+                
         if "openpnp" in pos_file_path:
             messagebox("ERROR: attempting to open an output file as input")
             return
@@ -140,13 +159,12 @@ class PreprocessorApp:
         if "alias" in pos_file_path:
             messagebox("ERROR: attempting to open alias file as input")
             return          
-        
-        self.builder.tkvariables['centroid_filepath'].set(pos_file_path)
-        
+
+        self.set_project_setting('centroid_filepath', pos_file_path, is_path=True, gui_var=True)
 
 
     def callback_select_BOM(self, event=None):
-        bom_file_path = self.make_project_abs_path(self.builder.tkvariables['bom_filepath'].get())
+        bom_file_path = self.get_project_setting("bom_filepath", True)
 
         bom_directory = bom_file_path.parent
         bom_name = bom_file_path.name
@@ -160,10 +178,7 @@ class PreprocessorApp:
             messagebox("ERROR: attempting to open a non bom file")
             return
 
-        bom_file_path = self.project_relative_path(bom_file_path)
-        
-        self.builder.tkvariables['bom_filepath'].set(bom_file_path)
-        
+        self.set_project_setting('bom_filepath', bom_file_path, is_path=True, gui_var=True)        
         self.show_parts()
 
     def callback_set_project_filepath(self, event=None):
@@ -184,15 +199,16 @@ class PreprocessorApp:
         self.builder.tkvariables['project_config_filepath'].set(project_file_path)
         
         #Write project path to the preprocessor config so it gets used next time
-        self.preprocessor_config['PROJECT']["config_filepath"] = project_file_path        
+        self.preprocessor_config['PROJECT']["config_filepath"] = project_file_path     
         with open(self.preprocessor_config_path, 'w') as configfile:
           self.preprocessor_config.write(configfile)
 
         #Reload the new project and set project path
         self.reload_project(project_file_path)
         
+        
     def callback_select_package_alias(self, event=None):
-        alias_file_path = self.make_project_abs_path(self.builder.tkvariables['package_alias_filepath'].get())
+        alias_file_path = self.get_project_setting('package_alias_filepath', is_path=True)
           
         aliasfile_directory = alias_file_path.parent
         aliasfile_name = alias_file_path.name
@@ -202,14 +218,12 @@ class PreprocessorApp:
         if not alias_file_path:
           return;
         
-        alias_file_path = self.project_relative_path(alias_file_path)
-                
-        self.builder.tkvariables['package_alias_filepath'].set(alias_file_path)
+        self.set_project_setting('package_alias_filepath', alias_file_path, is_path=True, gui_var=True)
         
         self.show_parts()
 
     def callback_select_part_alias(self, event=None):
-        alias_file_path = self.make_project_abs_path(self.builder.tkvariables['part_alias_filepath'].get())
+        alias_file_path = self.get_project_setting('part_alias_filepath', is_path=True)
           
         aliasfile_directory = alias_file_path.parent
         aliasfile_name = alias_file_path.name
@@ -219,9 +233,7 @@ class PreprocessorApp:
         if not alias_file_path:
           return;
         
-        alias_file_path = self.project_relative_path(alias_file_path)
-                
-        self.builder.tkvariables['part_alias_filepath'].set(alias_file_path)
+        self.set_project_setting('part_alias_filepath', alias_file_path, is_path=True, gui_var=True)
         
         self.show_parts()
               
@@ -248,20 +260,17 @@ class PreprocessorApp:
         return new_pos_file_path 
       
     def load_project_part_aliases(self):
-        part_alias_filepath = self.builder.tkvariables['part_alias_filepath'].get()
-        part_alias_filepath = self.make_project_abs_path(part_alias_filepath)
+        part_alias_filepath = self.get_project_setting('part_alias_filepath', is_path=True)
         part_aliases = Aliases(part_alias_filepath)
         return part_aliases
                   
     def load_project_package_aliases(self):
-        package_alias_filepath = self.builder.tkvariables['package_alias_filepath'].get()
-        package_alias_filepath = self.make_project_abs_path(package_alias_filepath)
+        package_alias_filepath = self.get_project_setting('package_alias_filepath', is_path=True)
         package_aliases = Aliases(package_alias_filepath)
         return package_aliases
               
     def callback_generate(self, event=None):
-        centroid_filepath = self.builder.tkvariables['centroid_filepath'].get()
-        centroid_filepath = self.make_project_abs_path(centroid_filepath)           
+        centroid_filepath = self.get_project_setting('centroid_filepath', is_path=True)
 
         if "openpnp" in str(centroid_filepath):
             messagebox("ERROR: attempting to use an output file as input")
@@ -269,12 +278,12 @@ class PreprocessorApp:
           
         if "alias" in str(centroid_filepath):
             messagebox("ERROR: attempting to use alias file as input")
-            return      
+            return         
           
-        flip_bottom = self.builder.tkvariables['flip_bottom'].get()
-        reverse_bottom = self.builder.tkvariables['reverse_bottom'].get()
+        flip_bottom = self.get_project_setting('flip_bottom', is_path=False)
+        reverse_bottom = self.get_project_setting('reverse_bottom', is_path=False)
+        part_alias = self.get_project_setting('part_alias', is_path=False)
 
-        part_alias = self.builder.tkvariables['part_alias'].get()
         part_aliases = None
         
         if part_alias:
@@ -282,7 +291,7 @@ class PreprocessorApp:
 
         package_aliases = self.load_project_package_aliases()
         
-        part_positions = PartPositions(centroid_filepath)
+        part_positions = KiCentroid(centroid_filepath)
         
         auto_filename = self.builder.tkvariables['auto_outfile_name'].get()
         new_pos_file_path = self.make_outfile_path(centroid_filepath)
@@ -330,7 +339,7 @@ class PreprocessorApp:
 
 
     def callback_kifoot2openpnp(self, event=None):
-        mod_file_path = self.make_project_abs_path(self.project_items['mod_filepath'])
+        mod_file_path = self.get_project_setting('mod_filepath', is_path=True)
 
         mod_directory = mod_file_path.parent
         mod_name = mod_file_path.name
@@ -341,19 +350,18 @@ class PreprocessorApp:
           return;
         
         #Remember the first selection as the default in the project
-        self.project_items['mod_filepath'] = self.project_relative_path(mod_file_paths[0])
+        self.set_project_setting('mod_filepath', mod_file_paths[0], is_path=True, gui_var=True)
 
         packages = OpenPnPPackagesXML()
-        invert_xpos = self.builder.tkvariables['kifoot2opnp_xinv'].get()
-        invert_ypos = self.builder.tkvariables['kifoot2opnp_yinv'].get()
-        backup = self.builder.tkvariables['kifoot2opnp_backup'].get()
-        overwrite = self.builder.tkvariables['kifoot2opnp_overwrite'].get()
         
-        marked_pins = self.builder.tkvariables['marked_pins'].get()
+        invert_xpos = self.get_project_setting('kifoot2opnp_xinv')
+        invert_ypos = self.get_project_setting('kifoot2opnp_yinv')
+        backup = self.get_project_setting('kifoot2opnp_backup')
+        overwrite = self.get_project_setting('kifoot2opnp_overwrite')
+                
+        marked_pins = self.get_project_setting('marked_pins')
         marked_pin_names = marked_pins.split(",")
-        
-        package_aliases = self.load_project_package_aliases().aliases
-      
+              
         for kicadmod_file_path in mod_file_paths: 
             rel_mod_file_path = self.project_relative_path(mod_file_path)        
             
@@ -362,16 +370,15 @@ class PreprocessorApp:
                                       invert_xpos=invert_xpos ,
                                       invert_ypos=invert_ypos ,
                                       overwrite = overwrite,
-                                      package_alias=package_aliases,
+                                      package_alias=self.package_aliases.aliases,
                                       marked_pin_names=marked_pin_names)
             
-    def show_parts(self):
-        rel_parts_file_path = self.make_project_abs_path(self.builder.tkvariables['openpnp_parts_filepath'].get())  
-        opnp_parts = OpenPnPParts(rel_parts_file_path)
-
+    def show_parts(self):              
         bom = self.load_project_bom()
         package_aliases = self.load_project_package_aliases()
         bom.alias_packages(package_aliases.aliases)
+        
+        opnp_parts = self.load_openpnp_parts()
 
         treeview_data = self.builder.get_object("treeview_data")
         for i in treeview_data.get_children():
