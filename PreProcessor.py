@@ -71,7 +71,7 @@ class PreprocessorApp:
 
         
     def get_project_setting(self, setting_id, is_path=False):
-        setting = (self.project_config['SETTINGS'][setting_id])
+        setting = self.builder.tkvariables[setting_id].get()
         if not is_path:
           return setting
         return self.make_project_abs_path(setting)
@@ -293,7 +293,7 @@ class PreprocessorApp:
         
         part_positions = KiCentroid(centroid_filepath)
         
-        auto_filename = self.builder.tkvariables['auto_outfile_name'].get()
+        auto_filename = self.get_project_setting('auto_outfile_name', is_path=False)
         new_pos_file_path = self.make_outfile_path(centroid_filepath)
         if not auto_filename:
           savefile_path = filedialog.asksaveasfilename(filetypes=[("OpenPnP centroid file", ".csv")] , 
@@ -315,27 +315,29 @@ class PreprocessorApp:
         
     def load_project_bom(self):
         bom = Bom()
-        bom_filepath = self.builder.tkvariables['bom_filepath'].get()
-        bom_filepath = self.make_project_abs_path(bom_filepath)
+        bom_filepath = self.get_project_setting('bom_filepath', is_path=True)
         bom.loadCsv(bom_filepath)
         return bom
        
     def callback_generate_qr_codes(self, event=None):
       open_pnp_parts = OpenPnPParts()
       open_pnp_parts.makeQRCodes()
-      open_pnp_parts.resizeQRCodes(self.builder.tkvariables['qrc_scale'].get())
+      qrc_scale = self.get_project_setting('qrc_scale', is_path=False)
+      open_pnp_parts.resizeQRCodes(qrc_scale)
       open_pnp_parts.addQRCodeTitle()
       if self.builder.tkvariables['qrc_individual_images'].get():
         open_pnp_parts.saveQRCodeImages()
         
-      if self.builder.tkvariables['qrc_bom_only'].get():
+      qrc_bom_only = self.get_project_setting('qrc_bom_only', is_path=False)
+      if qrc_bom_only:
         package_aliases = self.load_project_package_aliases()
              
         bom = self.load_project_bom()
         bom.alias_packages(package_aliases.aliases)
         open_pnp_parts.filter_by_bom(bom)
-        
-      open_pnp_parts.saveConcatenatedQRImage(self.builder.tkvariables['qrc_columns'].get(), self.project_directory());
+      
+      qrc_columns = self.get_project_setting('qrc_columns', is_path=False)
+      open_pnp_parts.saveConcatenatedQRImage(qrc_columns, self.project_directory());
 
 
     def callback_kifoot2openpnp(self, event=None):
