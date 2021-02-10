@@ -23,7 +23,7 @@ class BomItem():
     if self.part_alias != "":
       part = self.part_alias
 
-    return part + "-" + package
+    return package + "-" + part
 
 
 class Bom(object):

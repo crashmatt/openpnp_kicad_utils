@@ -374,15 +374,54 @@ class PreprocessorApp:
                                       overwrite = overwrite,
                                       package_alias=self.package_aliases.aliases,
                                       marked_pin_names=marked_pin_names)
-            
+
     def show_parts(self):              
         bom = self.load_project_bom()
         package_aliases = self.load_project_package_aliases()
         bom.alias_packages(package_aliases.aliases)
         
         opnp_parts = self.load_openpnp_parts()
+        
+        treeview_data = self.builder.get_object("treeview_data")        
+        #Clear treeview
+        for i in treeview_data.get_children():
+            treeview_data.delete(i)
+        
+        treeview_data["columns"]=("old","new", "action")
+        
+        treeview_data.column("#0", width=450, minwidth=450, stretch=tk.NO)
+        treeview_data.column("old", width=50, minwidth=40, stretch=tk.NO)
+        treeview_data.column("new", width=50, minwidth=40, stretch=tk.NO)
+        treeview_data.column("action", width=60, minwidth=60, stretch=tk.NO)
 
-        treeview_data = self.builder.get_object("treeview_data")
+        treeview_data.heading("#0",text="Part",anchor=tk.CENTER)
+        treeview_data.heading("old", text="Old",anchor=tk.CENTER)
+        treeview_data.heading("new", text="New",anchor=tk.CENTER)
+        treeview_data.heading("action", text="Action",anchor=tk.CENTER)
+        
+        opnp_part_ids = opnp_parts.part_id_dict.keys()
+        for bom_item in bom.parts:
+          part_opnp_name = bom_item.get_openpnp_name()
+          if part_opnp_name in opnp_part_ids:
+            opnp_part =  opnp_parts.part_id_dict[part_opnp_name]           
+            opnp_part_height = opnp_part["@height"]            
+            bom_part_height = bom_item.height
+            action = "Keep"
+            if bom_part_height != "0.0" and opnp_part_height == "0.0":
+              action = "Replace"
+            
+            treeview_data.insert("", 'end', text=part_opnp_name, values=(opnp_part_height, bom_part_height, action))
+            
+            
+    def show_bom_parts(self):              
+        bom = self.load_project_bom()
+        package_aliases = self.load_project_package_aliases()
+        bom.alias_packages(package_aliases.aliases)
+        
+        opnp_parts = self.load_openpnp_parts()
+
+        treeview_data = self.builder.get_object("treeview_data")        
+        #Clear treeview
         for i in treeview_data.get_children():
             treeview_data.delete(i)
         
