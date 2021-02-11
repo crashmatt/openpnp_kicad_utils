@@ -612,6 +612,7 @@
             <property name="idtocommand">false</property>
             <property name="text" translatable="yes">Overwrite</property>
             <property name="variable">boolean:overwrite_part_height</property>
+            <bind sequence="&lt;1&gt;" handler="callback_part_height_setting" add="" />
             <layout manager="grid">
               <property name="column">0</property>
               <property name="padx">10</property>
@@ -626,6 +627,7 @@
             <property name="text" translatable="yes">Ask overwrite</property>
             <property name="textvariable">double:ask_overwrite</property>
             <property name="variable">boolean:ask_overwrite_part_height</property>
+            <bind sequence="&lt;1&gt;" handler="callback_part_height_setting" add="" />
             <layout manager="grid">
               <property name="column">1</property>
               <property name="padx">10</property>

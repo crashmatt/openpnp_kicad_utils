@@ -20,6 +20,7 @@ PROJECT_UI = os.path.join(PROJECT_PATH, "Preprocessor.ui")
 
 class PreprocessorApp:
     def __init__(self, root):
+        self.root = root
         self.builder = builder = pygubu.Builder()
         builder.add_resource_path(PROJECT_PATH)
         builder.add_from_file(PROJECT_UI)
@@ -375,6 +376,9 @@ class PreprocessorApp:
                                       package_alias=self.package_aliases.aliases,
                                       marked_pin_names=marked_pin_names)
 
+    def callback_part_height_setting(self, event=None):
+        self.root.after(1000, self.show_parts)
+
     def show_parts(self):              
         bom = self.load_project_bom()
         package_aliases = self.load_project_package_aliases()
@@ -399,6 +403,8 @@ class PreprocessorApp:
         treeview_data.heading("new", text="Bom",anchor=tk.CENTER)
         treeview_data.heading("action", text="Action",anchor=tk.CENTER)
         
+        overwrite_part_height = self.get_project_setting('overwrite_part_height', is_path=False)
+        
         opnp_part_ids = opnp_parts.part_id_dict.keys()
         for bom_item in bom.parts:
           part_opnp_name = bom_item.get_openpnp_name()
@@ -410,49 +416,12 @@ class PreprocessorApp:
             opnp_part_height = opnp_part["@height"]            
             action = "Keep"
             if bom_part_height != "0.0" and opnp_part_height == "0.0":
-              action = "Replace"
+              action = "Set"
+            elif bom_part_height != "0.0" and overwrite_part_height:
+              action = "Overwrite"
             
           treeview_data.insert("", 'end', text=part_opnp_name, values=(opnp_part_height, bom_part_height, action))
-            
-            
-    def show_bom_parts(self):              
-        bom = self.load_project_bom()
-        package_aliases = self.load_project_package_aliases()
-        bom.alias_packages(package_aliases.aliases)
-        
-        opnp_parts = self.load_openpnp_parts()
 
-        treeview_data = self.builder.get_object("treeview_data")        
-        #Clear treeview
-        for i in treeview_data.get_children():
-            treeview_data.delete(i)
-        
-        treeview_data["columns"]=("opnp","bom", "action")
-        
-        treeview_data.column("#0", width=450, minwidth=350, stretch=tk.NO)
-        treeview_data.column("opnp", width=50, minwidth=40, stretch=tk.NO)
-        treeview_data.column("bom", width=50, minwidth=40, stretch=tk.NO)
-        treeview_data.column("action", width=80, minwidth=80, stretch=tk.NO)
-
-        treeview_data.heading("#0",text="Part",anchor=tk.CENTER)
-        treeview_data.heading("opnp", text="opnp",anchor=tk.CENTER)
-        treeview_data.heading("bom", text="bom",anchor=tk.CENTER)
-        treeview_data.heading("action", text="Action",anchor=tk.CENTER)
-        
-        for part_idx, part_id in enumerate(opnp_parts.part_id_dict.keys()):
-          part = opnp_parts.part_id_dict[part_id]
-          part_height = part["@height"]
-          bom_part_height = "0.0"
-          replace = "Keep"
-          for bom_item in bom.parts:
-            bom_part_id = bom_item.package + "-" + bom_item.value
-            if bom_part_id == part_id:
-              bom_part_height = bom_item.height
-              if bom_part_height != "0.0" and part_height == "0.0":
-                replace = "Replace"
-              
-          treeview_data.insert("", part_idx+1, text=part_id, values=(part_height, bom_part_height, replace))
-        
 
 #     def callback_set_part_heights(self, event=None):                      
 #         opnp_parts.bomToPartHeights(bom, False)

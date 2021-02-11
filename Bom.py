@@ -74,24 +74,21 @@ class Bom(object):
               return
             if value_field_idx == -1:
               return
-                
-          print(', '.join(line_values))
-          if len(line_values) == fields_cnt:
-            footprint = line_values[footprint_field_idx]
-            value = line_values[value_field_idx]
-            height = 0.0
-            if height_field_idx != -1:
-              height = line_values[height_field_idx]
-              
-            item = BomItem(value, footprint, height)
-            self.parts.append(item)
-            
-            #find designator references for part
-            refs = line_values[refs_field_idx].split(" ")
-            for ref in refs:
-              self.references[ref] = item
           else:
-            print("Fields:" + str(fields_cnt) + "values:" + str(len(line_values)))
+            if len(line_values) == fields_cnt:
+              footprint = line_values[footprint_field_idx]
+              value = line_values[value_field_idx]
+              height = 0.0
+              if height_field_idx != -1:
+                height = line_values[height_field_idx]
+                
+              item = BomItem(value, footprint, height)
+              self.parts.append(item)
+              
+              #find designator references for part
+              refs = line_values[refs_field_idx].split(" ")
+              for ref in refs:
+                self.references[ref] = item
                         
       return len(self.parts) > 0
         
