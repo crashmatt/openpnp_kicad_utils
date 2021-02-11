@@ -4,6 +4,8 @@ Created on Jan 23, 2021
 @author: matt
 '''
 
+import csv
+
 class BomItem():
   def __init__(self, value, package, height):
     self.value = value
@@ -40,37 +42,40 @@ class Bom(object):
         self.fields = []
         
     def loadCsv(self, filepath):
-      with open(filepath, "r") as csvFile:
-        csvlines = csvFile.readlines()
-        self.fields = csvlines[0].split(",")
-        fields_cnt = len(self.fields)
-        
-        refs_field_idx = -1
-        footprint_field_idx = -1
-        value_field_idx = -1
-        height_field_idx = -1
-        
-        for idx, field in enumerate(self.fields):
-          if field == "References":
-            refs_field_idx = idx
-          if field == "Footprint":
-            footprint_field_idx = idx
-          if field == "Value":
-            value_field_idx = idx
-          if field == "Height":
-            height_field_idx = idx
-        
-        #Check all header references are found
-        if refs_field_idx == -1:
-          return
-        if footprint_field_idx == -1:
-          return
-        if value_field_idx == -1:
-          return
+      with open(filepath, "r", newline='') as csvFile:
+        bomreader = csv.reader(csvFile, delimiter=",", quotechar='"')
+
+        #Scan through csv lines
+        for line_idx, line_values in enumerate(bomreader):
+      
+          if line_idx == 0:
+            self.fields = line_values
+            fields_cnt = len(self.fields)
+            
+            refs_field_idx = -1
+            footprint_field_idx = -1
+            value_field_idx = -1
+            height_field_idx = -1
+            
+            for idx, field in enumerate(self.fields):
+              if field == "References":
+                refs_field_idx = idx
+              if field == "Footprint":
+                footprint_field_idx = idx
+              if field == "Value":
+                value_field_idx = idx
+              if field == "Height":
+                height_field_idx = idx
+            
+            #Check all header references are found
+            if refs_field_idx == -1:
+              return
+            if footprint_field_idx == -1:
+              return
+            if value_field_idx == -1:
+              return
                 
-        #Scan through the valid lines
-        for line in csvlines[1:]:
-          line_values =  line.split(",")
+          print(', '.join(line_values))
           if len(line_values) == fields_cnt:
             footprint = line_values[footprint_field_idx]
             value = line_values[value_field_idx]
@@ -85,6 +90,8 @@ class Bom(object):
             refs = line_values[refs_field_idx].split(" ")
             for ref in refs:
               self.references[ref] = item
+          else:
+            print("Fields:" + str(fields_cnt) + "values:" + str(len(line_values)))
                         
       return len(self.parts) > 0
         

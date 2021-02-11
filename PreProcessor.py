@@ -389,28 +389,30 @@ class PreprocessorApp:
         
         treeview_data["columns"]=("old","new", "action")
         
-        treeview_data.column("#0", width=450, minwidth=450, stretch=tk.NO)
+        treeview_data.column("#0", width=450, minwidth=350, stretch=tk.NO)
         treeview_data.column("old", width=50, minwidth=40, stretch=tk.NO)
         treeview_data.column("new", width=50, minwidth=40, stretch=tk.NO)
-        treeview_data.column("action", width=60, minwidth=60, stretch=tk.NO)
+        treeview_data.column("action", width=80, minwidth=80, stretch=tk.NO)
 
         treeview_data.heading("#0",text="Part",anchor=tk.CENTER)
-        treeview_data.heading("old", text="Old",anchor=tk.CENTER)
-        treeview_data.heading("new", text="New",anchor=tk.CENTER)
+        treeview_data.heading("old", text="oPnP",anchor=tk.CENTER)
+        treeview_data.heading("new", text="Bom",anchor=tk.CENTER)
         treeview_data.heading("action", text="Action",anchor=tk.CENTER)
         
         opnp_part_ids = opnp_parts.part_id_dict.keys()
         for bom_item in bom.parts:
           part_opnp_name = bom_item.get_openpnp_name()
+          action = "No match"
+          bom_part_height = bom_item.height
+          opnp_part_height = "None"
           if part_opnp_name in opnp_part_ids:
             opnp_part =  opnp_parts.part_id_dict[part_opnp_name]           
             opnp_part_height = opnp_part["@height"]            
-            bom_part_height = bom_item.height
             action = "Keep"
             if bom_part_height != "0.0" and opnp_part_height == "0.0":
               action = "Replace"
             
-            treeview_data.insert("", 'end', text=part_opnp_name, values=(opnp_part_height, bom_part_height, action))
+          treeview_data.insert("", 'end', text=part_opnp_name, values=(opnp_part_height, bom_part_height, action))
             
             
     def show_bom_parts(self):              
@@ -425,16 +427,16 @@ class PreprocessorApp:
         for i in treeview_data.get_children():
             treeview_data.delete(i)
         
-        treeview_data["columns"]=("old","new", "action")
+        treeview_data["columns"]=("opnp","bom", "action")
         
-        treeview_data.column("#0", width=450, minwidth=450, stretch=tk.NO)
-        treeview_data.column("old", width=50, minwidth=40, stretch=tk.NO)
-        treeview_data.column("new", width=50, minwidth=40, stretch=tk.NO)
-        treeview_data.column("action", width=60, minwidth=60, stretch=tk.NO)
+        treeview_data.column("#0", width=450, minwidth=350, stretch=tk.NO)
+        treeview_data.column("opnp", width=50, minwidth=40, stretch=tk.NO)
+        treeview_data.column("bom", width=50, minwidth=40, stretch=tk.NO)
+        treeview_data.column("action", width=80, minwidth=80, stretch=tk.NO)
 
         treeview_data.heading("#0",text="Part",anchor=tk.CENTER)
-        treeview_data.heading("old", text="Old",anchor=tk.CENTER)
-        treeview_data.heading("new", text="New",anchor=tk.CENTER)
+        treeview_data.heading("opnp", text="opnp",anchor=tk.CENTER)
+        treeview_data.heading("bom", text="bom",anchor=tk.CENTER)
         treeview_data.heading("action", text="Action",anchor=tk.CENTER)
         
         for part_idx, part_id in enumerate(opnp_parts.part_id_dict.keys()):
