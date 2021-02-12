@@ -48,20 +48,20 @@ class OpenPnPParts():
   parts_filepath_default = Path(os.path.join(Path.home(), ".openpnp2", "parts.xml"))
   
   def __init__(self, parts_filepath=parts_filepath_default):
-    with open(parts_filepath, "rb") as parts_file:
-      parts_filedata = parts_file.read()
-      
-    self.openpnp_parts = xmltodict.parse(parts_filedata)
+    self.openpnp_parts_tree = etree.parse(str(parts_filepath))
+    print(self.openpnp_parts_tree)
     
-    self.parts = self.openpnp_parts["openpnp-parts"]["part"]    
-    print(self.parts)
+    header_element = self.openpnp_parts_tree.xpath("/openpnp-parts")
+    if len(header_element) == 0:
+      print("openpnp parts xml does not contain expected header")    
     
-    part_id_dict = {}
-    for part in self.parts :
-      part_id = part["@id"]
-      part_id_dict[part_id] = part
-    self.part_id_dict = part_id_dict
+    self.part_id_dict = {}
+    for part_element in self.openpnp_parts_tree.iter("part"):
+      part_id = part_element.get("id")
+      self.part_id_dict[part_id] = part_element
     
+    print(self.part_id_dict)
+        
   def makeQRCodes(self):
     for part in self.parts:
       part_id = part["@id"]
@@ -187,6 +187,7 @@ class OpenPnPParts():
 
       part["qrc_img"].save(part_path)
       
+      
   def filter_by_bom(self, bom):
       valid_parts = []
       for bom_item in bom.parts:
@@ -196,20 +197,32 @@ class OpenPnPParts():
           
       self.parts = valid_parts
       
+  def get_part_height(self, part_id):
+    if part_id not in self.part_id_dict.keys():
+      return None
+    return self.part_id_dict[part_id].get("height")
       
-  def bomToPartHeights(self, bom, overwrite):
-      for bom_item in bom.parts:
-        #Only set height if bom value is set
-        if bom_item.height != "0.0":
-          bom_part_id = bom_item.package + "-" + bom_item.value
-          if bom_part_id in self.part_id_dict.keys():
-            part = self.part_id_dict[bom_part_id]
-            part_height = part["@height"]
-            if overwrite or part_height == "0.0":
-                part["@height"] = bom_item.height
-            
-      
+  def set_part_height(self, part_id, part_height):
+    part = self.part_id_dict[part_id]
+    part["@height"] = str(part_height)
+
+
+  def exportParts(self, export_parts_path, backup=True):
+    xml = etree.tostring(self.openpnp_parts_tree, pretty_print=True)
+
+    #Find next available backup increment
+    backup_increment = 0
+    while os.path.exists(Path(export_parts_path).with_suffix(".bak%s.xml" % backup_increment)):
+      backup_increment += 1
+    #Move existing file to new backup increment
+    backup_path = Path(export_parts_path).with_suffix(".bak%s.xml" % backup_increment)
+    backup = Path(export_parts_path)
+    backup.rename(backup_path)
+        
+    with open(export_parts_path, "wb") as export_file:
+      export_file.write(xml)
    
+
 def main():
   open_pnp_parts = OpenPnPParts()
   open_pnp_parts.makeQRCodes()

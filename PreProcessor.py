@@ -15,10 +15,12 @@ from OpenPnPParts import *
 
 from pcb.kicad_mod import KicadMod
 
+
 PROJECT_PATH = os.path.dirname(__file__)
 PROJECT_UI = os.path.join(PROJECT_PATH, "Preprocessor.ui")
 
 class PreprocessorApp:
+    
     def __init__(self, root):
         self.root = root
         self.builder = builder = pygubu.Builder()
@@ -38,7 +40,7 @@ class PreprocessorApp:
                                ["auto_outfile_name", True],
                                ["part_alias", False],
                                ["openpnp_parts_filepath", OpenPnPParts.parts_filepath_default ],
-                               ["openpnp_packages_filepath", OpenPnPPackages.packages_filepath_default ],
+                               ["openpnp_packages_filepath", OpenPnPPackagesXML.packages_filepath_default ],
                                ["qrc_columns", 3],
                                ["qrc_scale", 0.5],
                                ["qrc_bom_only", False],
@@ -377,7 +379,7 @@ class PreprocessorApp:
                                       marked_pin_names=marked_pin_names)
 
     def callback_part_height_setting(self, event=None):
-        self.root.after(1000, self.show_parts)
+        self.root.after(100, self.show_parts)
         
     def update_parts(self):
         self.bom = self.load_project_bom()
@@ -395,7 +397,20 @@ class PreprocessorApp:
             opnp_part =  self.opnp_parts.part_id_dict[part_opnp_name]
           bom2opnp = BomItemToOPnPPart(bom_item, opnp_part)
           self.bom_to_opnp_dict[part_opnp_name] = bom2opnp
-        
+    
+    PART_HEIGHT_NOT_IN_BOM = 0
+    PART_HEIGHT_KEEP = 1
+    PART_HEIGHT_OVERWRITE = 2
+    
+    def get_part_height_overwrite(self, bom_height, opnp_height, overwrite=False):
+        if bom_height == "0.0":
+          return self.PART_HEIGHT_NOT_IN_BOM
+        if opnp_height == "0.0":
+          return self.PART_HEIGHT_OVERWRITE
+        if overwrite:
+          return self.PART_HEIGHT_OVERWRITE
+        return self.PART_HEIGHT_KEEP
+    
 
     def show_parts(self):              
         self.update_parts()
@@ -403,7 +418,6 @@ class PreprocessorApp:
         overwrite_part_height = self.get_project_setting('overwrite_part_height', is_path=False)
         ask_overwrite_part_height = self.get_project_setting('ask_overwrite_part_height', is_path=False)
 
-                        
         treeview_data = self.builder.get_object("treeview_data")        
         #Clear treeview
         for i in treeview_data.get_children():
@@ -420,40 +434,54 @@ class PreprocessorApp:
         treeview_data.heading("#0",text="Part",anchor=tk.CENTER)
         treeview_data.heading("opnp", text="oPnP",anchor=tk.CENTER)
         treeview_data.heading("bom", text="Bom",anchor=tk.CENTER)
-        treeview_data.heading("new", text="new",anchor=tk.CENTER)
+        treeview_data.heading("new", text="New",anchor=tk.CENTER)
         treeview_data.heading("action", text="Action",anchor=tk.CENTER)
         
         for bom2opnp_name in self.bom_to_opnp_dict.keys():
           bom2opnp = self.bom_to_opnp_dict[bom2opnp_name]
           
           action = ""
-          bom_part_height = bom2opnp.bom_item.height
-
-          if bom2opnp.opnp_part == None:
+          bom_item_height = bom2opnp.bom_item.height
+          opnp_part =  bom2opnp.opnp_part
+                    
+          if opnp_part == None:
             action = "No match"
             opnp_part_height = ""
             new_height = ""
           else:
-            opnp_part =  bom2opnp.opnp_part        
-            opnp_part_height = opnp_part["@height"]            
-            new_height = opnp_part_height
-            action = "Keep"
-            if bom_part_height != "0.0" and opnp_part_height == "0.0":
-              action = "Set"
-              new_height = bom_part_height
-            elif bom_part_height != "0.0" and overwrite_part_height:
-              if ask_overwrite_part_height:
-                action = "ask"
-                new_height = "??"
-              else:
-                new_height = bom_part_height
-                action = "Overwrite"
+            opnp_part_height = opnp_part.get("height")        
+            overwrite_type = self.get_part_height_overwrite(bom_item_height, opnp_part_height, overwrite_part_height)
+            if overwrite_type == self.PART_HEIGHT_NOT_IN_BOM:
+                new_height = ""
+                action = "Missing"              
+            if overwrite_type == self.PART_HEIGHT_KEEP:
+                new_height = ""
+                action = "Keep"
+            if overwrite_type == self.PART_HEIGHT_OVERWRITE:
+                action = "Set"
+                new_height = bom_item_height
             
-          treeview_data.insert("", 'end', text=bom2opnp_name, values=(opnp_part_height, bom_part_height, new_height, action))
+          treeview_data.insert("", 'end', text=bom2opnp_name, values=(opnp_part_height, bom_item_height, new_height, action))
 
-#     def callback_set_part_heights(self, event=None):                      
-#         opnp_parts.bomToPartHeights(bom, False)
+    def callback_set_part_heights(self, event=None):
+        for opnp_id in self.bom_to_opnp_dict.keys():
+            bom2opnp = self.bom_to_opnp_dict[opnp_id]
+
+            if bom2opnp.opnp_part != None:
+                bom_item_height = bom2opnp.bom_item.height
+                opnp_part =  bom2opnp.opnp_part    
+                opnp_part_height = opnp_part.get("height")           
+                            
+                overwrite_part_height = self.get_project_setting('overwrite_part_height', is_path=False)
+                overwrite_type = self.get_part_height_overwrite(bom_item_height, opnp_part_height, overwrite_part_height)
+                if overwrite_type == self.PART_HEIGHT_OVERWRITE:
+                  
+                  opnp_part.set("height", str(bom_item_height) )
         
+        openpnp_parts_filepath = self.get_project_setting("openpnp_parts_filepath", is_path=True)
+        self.opnp_parts.exportParts(openpnp_parts_filepath, backup=True)
+            
+            
                 
     def run(self):
         self.mainwindow.mainloop()

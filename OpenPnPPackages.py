@@ -58,36 +58,38 @@ class PackageAdjustments():
   
     
 
-class OpenPnPPackages():
-  packages_filepath_default = Path(os.path.join(Path.home(), ".openpnp2", "packages.xml"))
-  
-  '''
-  classdocs
-  '''  
-  def __init__(self, packages_filepath=packages_filepath_default):
-    '''
-    Constructor
-    '''
-    with open(packages_filepath, "rb") as packages_file:
-      packages_filedata = packages_file.read()
-
-    self.openpn_packages = xmltodict.parse(packages_filedata)
-    self.packages = self.openpn_packages["openpnp-packages"]["package"]
-    print(self.packages)
-
-    package_id_dict = {}
-    for package in self.packages:
-      package_id_dict[package["@id"]] = package
-    self.package_id_dict = package_id_dict
+# class OpenPnPPackages():
+#   packages_filepath_default = Path(os.path.join(Path.home(), ".openpnp2", "packages.xml"))
+#   
+#   '''
+#   classdocs
+#   '''  
+#   def __init__(self, packages_filepath=packages_filepath_default):
+#     '''
+#     Constructor
+#     '''
+#     with open(packages_filepath, "rb") as packages_file:
+#       packages_filedata = packages_file.read()
+# 
+#     self.openpn_packages = xmltodict.parse(packages_filedata)
+#     self.packages = self.openpn_packages["openpnp-packages"]["package"]
+#     print(self.packages)
+# 
+#     package_id_dict = {}
+#     for package in self.packages:
+#       package_id_dict[package["@id"]] = package
+#     self.package_id_dict = package_id_dict
     
     
 class OpenPnPPackagesXML():    
-  def __init__(self, packages_filepath=OpenPnPPackages.packages_filepath_default ):
+  packages_filepath_default = Path(os.path.join(Path.home(), ".openpnp2", "packages.xml"))
+  
+  def __init__(self, packages_filepath=packages_filepath_default ):
     self.packages_tree = etree.parse(str(packages_filepath))
     
     header_element = self.packages_tree.xpath("/openpnp-packages")
     if len(header_element) == 0:
-      print("openpnp xml does not contain expected header")
+      print("openpnp packages xml does not contain expected header")
 
   def exportPackages(self, export_path):
     xml = etree.tostring(self.packages_tree, pretty_print=True)
