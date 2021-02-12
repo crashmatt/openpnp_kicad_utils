@@ -391,19 +391,22 @@ class PreprocessorApp:
         for i in treeview_data.get_children():
             treeview_data.delete(i)
         
-        treeview_data["columns"]=("old","new", "action")
+        treeview_data["columns"]=("opnp", "bom", "new", "action")
         
         treeview_data.column("#0", width=450, minwidth=350, stretch=tk.NO)
-        treeview_data.column("old", width=50, minwidth=40, stretch=tk.NO)
+        treeview_data.column("opnp", width=50, minwidth=40, stretch=tk.NO)
+        treeview_data.column("bom", width=50, minwidth=40, stretch=tk.NO)
         treeview_data.column("new", width=50, minwidth=40, stretch=tk.NO)
         treeview_data.column("action", width=80, minwidth=80, stretch=tk.NO)
 
         treeview_data.heading("#0",text="Part",anchor=tk.CENTER)
-        treeview_data.heading("old", text="oPnP",anchor=tk.CENTER)
-        treeview_data.heading("new", text="Bom",anchor=tk.CENTER)
+        treeview_data.heading("opnp", text="oPnP",anchor=tk.CENTER)
+        treeview_data.heading("bom", text="Bom",anchor=tk.CENTER)
+        treeview_data.heading("new", text="new",anchor=tk.CENTER)
         treeview_data.heading("action", text="Action",anchor=tk.CENTER)
         
         overwrite_part_height = self.get_project_setting('overwrite_part_height', is_path=False)
+        ask_overwrite_part_height = self.get_project_setting('ask_overwrite_part_height', is_path=False)
         
         opnp_part_ids = opnp_parts.part_id_dict.keys()
         for bom_item in bom.parts:
@@ -411,17 +414,24 @@ class PreprocessorApp:
           action = "No match"
           bom_part_height = bom_item.height
           opnp_part_height = "None"
+          new_height = opnp_part_height
           if part_opnp_name in opnp_part_ids:
             opnp_part =  opnp_parts.part_id_dict[part_opnp_name]           
             opnp_part_height = opnp_part["@height"]            
+            new_height = opnp_part_height
             action = "Keep"
             if bom_part_height != "0.0" and opnp_part_height == "0.0":
               action = "Set"
+              new_height = bom_part_height
             elif bom_part_height != "0.0" and overwrite_part_height:
-              action = "Overwrite"
+              if ask_overwrite_part_height:
+                action = "ask"
+                new_height = "??"
+              else:
+                new_height = bom_part_height
+                action = "Overwrite"
             
-          treeview_data.insert("", 'end', text=part_opnp_name, values=(opnp_part_height, bom_part_height, action))
-
+          treeview_data.insert("", 'end', text=part_opnp_name, values=(opnp_part_height, bom_part_height, new_height, action))
 
 #     def callback_set_part_heights(self, event=None):                      
 #         opnp_parts.bomToPartHeights(bom, False)
