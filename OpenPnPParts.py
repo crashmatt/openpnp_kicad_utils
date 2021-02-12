@@ -56,15 +56,18 @@ class OpenPnPParts():
       print("openpnp parts xml does not contain expected header")    
     
     self.part_id_dict = {}
+    self.part_img_dict = {}
+
     for part_element in self.openpnp_parts_tree.iter("part"):
       part_id = part_element.get("id")
       self.part_id_dict[part_id] = part_element
+      self.part_img_dict[part_id] = None
     
     print(self.part_id_dict)
+    
         
   def makeQRCodes(self):
-    for part in self.parts:
-      part_id = part["@id"]
+    for part_id in self.part_id_dict.keys():
       
       qr = qrcode.QRCode(
           version=None,
@@ -78,24 +81,24 @@ class OpenPnPParts():
 
       img = qr.make_image(fill_color="black", back_color="white")
       
-      part["qrc_img"] = img
+      self.part_img_dict[part_id] = img
       
   def resizeQRCodes(self, scale):
-    for part in self.parts:
-      qrc_img = part["qrc_img"]
+    for part_id in self.part_img_dict.keys():
+      qrc_img = self.part_img_dict[part_id]
       width, height = qrc_img.size
       
       width = int(width * scale)
       height = int(height * scale)
       
       qrc_img = qrc_img.resize( (width, height) )
-      part["qrc_img"] = qrc_img
+      self.part_img_dict[part_id] = qrc_img
+      
       
   def addQRCodeTitle(self, left=True, ttf_path="/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf", font_size=16):
     text_margin = 0.05
-    for part in self.parts:
-      part_id = part["@id"]
-      qrc_img = part["qrc_img"]
+    for part_id in self.part_img_dict.keys():
+      qrc_img = self.part_img_dict[part_id]
       qrc_width, qrc_height = qrc_img.size
       
       font = ImageFont.truetype(ttf_path, font_size)
@@ -121,23 +124,23 @@ class OpenPnPParts():
         draw = ImageDraw.Draw(newimg)
         draw.text( (text_hpos, text_vpos), part_id, font=font)
       
-      part["qrc_img"] = newimg
+      self.part_img_dict[part_id] = newimg
+      
       
   def makeConcatenatedQRImage(self, columns=3):
     max_width = 0
     max_height = 0
     part_ids = []
 
-    for part in self.parts:
-      part_ids.append(part["@id"])
-      qrc_img = part["qrc_img"]
+    for part_id in self.part_img_dict.keys():
+      qrc_img = self.part_img_dict[part_id]
       qrc_width, qrc_height = qrc_img.size
       if qrc_width > max_width:
         max_width = qrc_width
       if qrc_height > max_height:
         max_height = qrc_height
       
-    part_rows = int(ceil(len(self.parts) / columns))
+    part_rows = int(ceil(len(self.part_img_dict) / columns))
     
     total_height = part_rows * max_height
 
@@ -145,18 +148,16 @@ class OpenPnPParts():
     column = 0
     row = 0
 
-    sorted_part_ids = sorted(part_ids)
+    sorted_part_ids = sorted(self.part_img_dict.keys())
     
     for sorted_id in sorted_part_ids:
-      for part in self.parts:
-        if part["@id"] == sorted_id:
-          qrc_img = part["qrc_img"]
-          newimg.paste(qrc_img, (column * max_width, row * max_height))
-          column += 1
-          if column >= columns:
-            row += 1
-            column = 0
-      
+        qrc_img = self.part_img_dict[sorted_id]
+        newimg.paste(qrc_img, (column * max_width, row * max_height))
+        column += 1
+        if column >= columns:
+          row += 1
+          column = 0
+                
     return newimg
     
       
@@ -177,8 +178,8 @@ class OpenPnPParts():
     if not os.path.exists(qr_directory):
       os.mkdir(qr_directory)
 
-    for part in self.parts:
-      part_id = part["@id"]
+    for part_id in self.part_img_dict.keys():
+      qrc_img = self.part_img_dict[part_id]      
       part_filename = part_id + ".png"
       #replace directory characters
       part_filename = part_filename.replace("/", "-")
