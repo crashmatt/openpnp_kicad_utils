@@ -6,7 +6,21 @@ Created on Jan 23, 2021
 
 import csv
 
-class BomItem():
+class BomItemToOPnPPart():
+  OPNP_PART_HEIGHT_KEEP = 0
+  OPNP_PART_HEIGHT_OVERWRITE = 1
+    
+  def __init__(self, bom_item, opnp_part):
+    self.bom_item = bom_item
+    self.opnp_part = opnp_part
+
+    self.opnp_part_status = self.OPNP_PART_HEIGHT_KEEP
+  
+
+class BomItem():    
+  OPNP_PART_HEIGHT_KEEP = 0
+  OPNP_PART_HEIGHT_OVERWRITE = 1
+    
   def __init__(self, value, package, height):
     self.value = value
     self.package = package
@@ -14,6 +28,7 @@ class BomItem():
     
     self.package_alias = ""
     self.part_alias = ""
+    
   
   def get_openpnp_name(self):
     package = self.package

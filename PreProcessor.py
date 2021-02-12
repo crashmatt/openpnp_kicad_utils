@@ -378,14 +378,32 @@ class PreprocessorApp:
 
     def callback_part_height_setting(self, event=None):
         self.root.after(1000, self.show_parts)
+        
+    def update_parts(self):
+        self.bom = self.load_project_bom()
+        package_aliases = self.load_project_package_aliases()
+        self.bom.alias_packages(package_aliases.aliases)
+        
+        self.opnp_parts = self.load_openpnp_parts()
+        self.bom_to_opnp_dict = {}
+        
+        opnp_part_ids = self.opnp_parts.part_id_dict.keys()
+        for bom_item in self.bom.parts:
+          part_opnp_name = bom_item.get_openpnp_name()
+          opnp_part = None
+          if part_opnp_name in opnp_part_ids:
+            opnp_part =  self.opnp_parts.part_id_dict[part_opnp_name]
+          bom2opnp = BomItemToOPnPPart(bom_item, opnp_part)
+          self.bom_to_opnp_dict[part_opnp_name] = bom2opnp
+        
 
     def show_parts(self):              
-        bom = self.load_project_bom()
-        package_aliases = self.load_project_package_aliases()
-        bom.alias_packages(package_aliases.aliases)
+        self.update_parts()
         
-        opnp_parts = self.load_openpnp_parts()
-        
+        overwrite_part_height = self.get_project_setting('overwrite_part_height', is_path=False)
+        ask_overwrite_part_height = self.get_project_setting('ask_overwrite_part_height', is_path=False)
+
+                        
         treeview_data = self.builder.get_object("treeview_data")        
         #Clear treeview
         for i in treeview_data.get_children():
@@ -405,18 +423,18 @@ class PreprocessorApp:
         treeview_data.heading("new", text="new",anchor=tk.CENTER)
         treeview_data.heading("action", text="Action",anchor=tk.CENTER)
         
-        overwrite_part_height = self.get_project_setting('overwrite_part_height', is_path=False)
-        ask_overwrite_part_height = self.get_project_setting('ask_overwrite_part_height', is_path=False)
-        
-        opnp_part_ids = opnp_parts.part_id_dict.keys()
-        for bom_item in bom.parts:
-          part_opnp_name = bom_item.get_openpnp_name()
-          action = "No match"
-          bom_part_height = bom_item.height
-          opnp_part_height = "None"
-          new_height = opnp_part_height
-          if part_opnp_name in opnp_part_ids:
-            opnp_part =  opnp_parts.part_id_dict[part_opnp_name]           
+        for bom2opnp_name in self.bom_to_opnp_dict.keys():
+          bom2opnp = self.bom_to_opnp_dict[bom2opnp_name]
+          
+          action = ""
+          bom_part_height = bom2opnp.bom_item.height
+
+          if bom2opnp.opnp_part == None:
+            action = "No match"
+            opnp_part_height = ""
+            new_height = ""
+          else:
+            opnp_part =  bom2opnp.opnp_part        
             opnp_part_height = opnp_part["@height"]            
             new_height = opnp_part_height
             action = "Keep"
@@ -431,7 +449,7 @@ class PreprocessorApp:
                 new_height = bom_part_height
                 action = "Overwrite"
             
-          treeview_data.insert("", 'end', text=part_opnp_name, values=(opnp_part_height, bom_part_height, new_height, action))
+          treeview_data.insert("", 'end', text=bom2opnp_name, values=(opnp_part_height, bom_part_height, new_height, action))
 
 #     def callback_set_part_heights(self, event=None):                      
 #         opnp_parts.bomToPartHeights(bom, False)
