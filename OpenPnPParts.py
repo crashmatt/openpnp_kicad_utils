@@ -190,12 +190,16 @@ class OpenPnPParts():
       
       
   def filter_by_id_list(self, id_list):
-      valid_parts = []
+      part_id_dict = {}
+      part_img_dict = {}    
+    
       for part_id in id_list:
         if part_id in self.part_id_dict.keys():
-          valid_parts.append(self.part_id_dict[part_id])
+          part_id_dict[part_id] = self.part_id_dict[part_id]
+          part_img_dict[part_id] = self.part_img_dict[part_id]
           
-      self.parts = valid_parts
+      self.part_id_dict = part_id_dict
+      self.part_img_dict = part_img_dict
       
   def get_part_height(self, part_id):
     if part_id not in self.part_id_dict.keys():
