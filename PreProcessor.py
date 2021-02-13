@@ -324,21 +324,25 @@ class PreprocessorApp:
        
     def callback_generate_qr_codes(self, event=None):
       open_pnp_parts = OpenPnPParts()
-      open_pnp_parts.makeQRCodes()
-      qrc_scale = self.get_project_setting('qrc_scale', is_path=False)
-      open_pnp_parts.resizeQRCodes(qrc_scale)
-      open_pnp_parts.addQRCodeTitle()
-      if self.builder.tkvariables['qrc_individual_images'].get():
-        open_pnp_parts.saveQRCodeImages()
-        
+
       qrc_bom_only = self.get_project_setting('qrc_bom_only', is_path=False)
       if qrc_bom_only:
         package_aliases = self.load_project_package_aliases()
              
         bom = self.load_project_bom()
         bom.alias_packages(package_aliases.aliases)
-        open_pnp_parts.filter_by_bom(bom)
+        id_list = []
+        for bom_item in bom.parts:
+          id_list.append(bom_item.get_openpnp_name())
+        open_pnp_parts.filter_by_id_list(id_list)
       
+      open_pnp_parts.makeQRCodes()
+      qrc_scale = self.get_project_setting('qrc_scale', is_path=False)
+      open_pnp_parts.resizeQRCodes(qrc_scale)
+      open_pnp_parts.addQRCodeTitle()
+      if self.builder.tkvariables['qrc_individual_images'].get():
+        open_pnp_parts.saveQRCodeImages()
+              
       qrc_columns = self.get_project_setting('qrc_columns', is_path=False)
       open_pnp_parts.saveConcatenatedQRImage(qrc_columns, self.project_directory());
 

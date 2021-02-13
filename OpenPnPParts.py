@@ -64,7 +64,7 @@ class OpenPnPParts():
       self.part_img_dict[part_id] = None
     
     print(self.part_id_dict)
-    
+
         
   def makeQRCodes(self):
     for part_id in self.part_id_dict.keys():
@@ -179,22 +179,21 @@ class OpenPnPParts():
       os.mkdir(qr_directory)
 
     for part_id in self.part_img_dict.keys():
-      qrc_img = self.part_img_dict[part_id]      
       part_filename = part_id + ".png"
       #replace directory characters
       part_filename = part_filename.replace("/", "-")
       part_filename = part_filename.replace("\\", "-")
       part_path = os.path.join(qr_directory, part_filename)
 
-      part["qrc_img"].save(part_path)
+      qrc_img = self.part_img_dict[part_id]      
+      qrc_img.save(part_path)
       
       
-  def filter_by_bom(self, bom):
+  def filter_by_id_list(self, id_list):
       valid_parts = []
-      for bom_item in bom.parts:
-        bom_part_id = bom_item.package + "-" + bom_item.value
-        if bom_part_id in self.part_id_dict.keys():
-          valid_parts.append(self.part_id_dict[bom_part_id])
+      for part_id in id_list:
+        if part_id in self.part_id_dict.keys():
+          valid_parts.append(self.part_id_dict[part_id])
           
       self.parts = valid_parts
       
