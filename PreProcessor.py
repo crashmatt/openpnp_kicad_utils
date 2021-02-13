@@ -344,7 +344,10 @@ class PreprocessorApp:
         open_pnp_parts.saveQRCodeImages()
               
       qrc_columns = self.get_project_setting('qrc_columns', is_path=False)
-      open_pnp_parts.saveConcatenatedQRImage(qrc_columns, self.project_directory());
+      
+      bom_filepath = self.get_project_setting("bom_filepath")
+      stem = Path(bom_filepath).stem
+      open_pnp_parts.saveConcatenatedQRImage(qrc_columns, self.project_directory(), stem);
 
 
     def callback_kifoot2openpnp(self, event=None):

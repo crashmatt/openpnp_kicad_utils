@@ -161,7 +161,7 @@ class OpenPnPParts():
     return newimg
     
       
-  def saveConcatenatedQRImage(self, columns, directory=None):
+  def saveConcatenatedQRImage(self, columns, directory=None, stem=""):
     img = self.makeConcatenatedQRImage(columns)
     if directory == None:
       qr_directory = os.path.join( os.getcwd(), "OpenPnpPartQRCodes")
@@ -169,7 +169,10 @@ class OpenPnPParts():
         os.mkdir(qr_directory)
     else:
       qr_directory = directory
-    part_path = os.path.join(qr_directory, "concatenated.png")
+    if stem == "":
+      part_path = os.path.join(qr_directory, "concatenated_qrc.png")
+    else:
+      part_path = os.path.join(qr_directory, stem + "_qrc.png")      
     img.save(part_path)
 
 
