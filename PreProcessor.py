@@ -351,20 +351,20 @@ class PreprocessorApp:
 
 
     def callback_kifoot2openpnp(self, event=None):
-        mod_file_path = self.get_project_setting('mod_filepath', is_path=True)
+        mod_file_path = self.project_items["mod_filepath"]
+        mod_file_path = self.make_project_abs_path(mod_file_path)
 
         mod_directory = mod_file_path.parent
         mod_name = mod_file_path.name
         
-        mod_file_paths = filedialog.askopenfilenames(filetypes=[("KiCAD mod file", ".mod")] , initialdir=mod_directory, initialfile=mod_name)
+        mod_file_paths = filedialog.askopenfilenames(filetypes=[("KiCAD mod file", ".kicad_mod")] , initialdir=mod_directory)
       
         if len(mod_file_paths) == 0:
           return;
         
-        #Remember the first selection as the default in the project
-        self.set_project_setting('mod_filepath', mod_file_paths[0], is_path=True, gui_var=True)
-
         packages = OpenPnPPackagesXML()
+        
+        package_aliases = self.load_project_package_aliases().aliases
         
         invert_xpos = self.get_project_setting('kifoot2opnp_xinv')
         invert_ypos = self.get_project_setting('kifoot2opnp_yinv')
@@ -375,15 +375,21 @@ class PreprocessorApp:
         marked_pin_names = marked_pins.split(",")
               
         for kicadmod_file_path in mod_file_paths: 
-            rel_mod_file_path = self.project_relative_path(mod_file_path)        
+            rel_mod_file_path = self.project_relative_path(mod_file_path)    
             
             kicadmod = KicadMod(kicadmod_file_path)
             packages.insertKiCadModPads(kicadmod, 
                                       invert_xpos=invert_xpos ,
                                       invert_ypos=invert_ypos ,
                                       overwrite = overwrite,
-                                      package_alias=self.package_aliases.aliases,
+                                      package_alias=package_aliases,
                                       marked_pin_names=marked_pin_names)
+
+        packages.exportPackages()
+
+        #Remember the first selection as the default in the project
+        self.project_items["mod_filepath"] = self.project_relative_path(mod_file_paths[0])
+
 
     def callback_part_height_setting(self, event=None):
         self.root.after(100, self.show_parts)

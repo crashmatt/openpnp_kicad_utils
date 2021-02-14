@@ -91,7 +91,7 @@ class OpenPnPPackagesXML():
     if len(header_element) == 0:
       print("openpnp packages xml does not contain expected header")
 
-  def exportPackages(self, export_path):
+  def exportPackages(self, export_path=packages_filepath_default):
     xml = etree.tostring(self.packages_tree, pretty_print=True)
     
     with open(export_path, "wb") as export_file:
@@ -123,15 +123,21 @@ class OpenPnPPackagesXML():
       if package_element_id == kicad_package_id:
         print("Found package element: ", package_element_id)
            
-        pad_elements = package_element.xpath("./footprint/pad")
-        if len(pad_elements) > 0:
-          print("openpnp package has pas definition already.  Will not overwrite.  Do manual pad definition removal")
-          return False
-
-        print("openpnp package %s has no previous pad definition" % kicad_package_id)
- 
-#         footprint_element = package_element.xpath("./footprint")
         footprint_element = package_element.find("footprint")
+        pad_elements = package_element.xpath("./footprint/pad")
+        
+        if len(pad_elements) > 0:
+          if overwrite:
+            print("Overwriting openpnp package:%s - Removing pads" % kicad_package_id)
+            for pad_element in pad_elements:
+                pad_element.getparent().remove(pad_element)
+          else:
+            print("openpnp package has pas definition already.  Will not overwrite.  Do manual pad definition removal")
+            return False
+        else:
+          print("openpnp package %s has no previous pad definition" % kicad_package_id)
+
+ 
     
         for kicad_pad in kicad_mod.pads:
           pad_attribs =  {}
