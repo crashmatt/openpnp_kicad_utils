@@ -410,9 +410,9 @@ class PreprocessorApp:
     PART_HEIGHT_OVERWRITE = 2
     
     def get_part_height_overwrite(self, bom_height, opnp_height, overwrite=False):
-        if bom_height == "0.0":
+        if bom_height == "0.0" or bom_height == "":
           return self.PART_HEIGHT_NOT_IN_BOM
-        if opnp_height == "0.0":
+        if opnp_height == "0.0" or opnp_height == "":
           return self.PART_HEIGHT_OVERWRITE
         if overwrite:
           return self.PART_HEIGHT_OVERWRITE
