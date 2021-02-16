@@ -80,6 +80,36 @@ class PackageAdjustments():
 #       package_id_dict[package["@id"]] = package
 #     self.package_id_dict = package_id_dict
     
+class OpenPnPPad():
+  def __init__(self, x, y, width, height, rotation, roundness=0.0):
+      self.x = x
+      self.y = y
+      self.width = width
+      self.height = height
+      self.rotation = rotation
+      self.roundness = roundness
+
+  def _get_extents(self):
+      xmin = self.x - self.width * 0.5
+      xmax = self.x + self.width * 0.5
+      ymin = self.y - self.height * 0.5
+      ymax = self.y + self.height * 0.5
+      extents = {"xmin":xmin, "xmax":xmax, "ymin":ymin, "ymax":ymax}   
+      return extents
+
+  def merge(self, pad):
+      extents1 = self._get_extents()
+      extents2 = pad._get_extents()
+      xmin = min(extents1["xmin"], extents2["xmin"])
+      xmax = min(extents1["xmax"], extents2["xmax"])
+      ymin = min(extents1["ymin"], extents2["ymin"])
+      ymax = min(extents1["ymax"], extents2["ymax"])
+      self.width = xmax - xmin
+      self.height = ymax - ymin
+      self.x = 0.5 * (xmin + xmax)
+      self.y = 0.5 * (ymin + ymax)
+      
+      
     
 class OpenPnPPackagesXML():    
   packages_filepath_default = Path(os.path.join(Path.home(), ".openpnp2", "packages.xml"))
@@ -109,7 +139,8 @@ class OpenPnPPackagesXML():
                          overwrite=False, 
                          invert_ypos=False, 
                          invert_xpos=False, 
-                         marked_pin_names=[]):
+                         marked_pin_names=[],
+                         merge_pad_ids = True):
     
     kicad_package_id = kicad_mod.name
     if package_alias:
@@ -137,11 +168,10 @@ class OpenPnPPackagesXML():
         else:
           print("openpnp package %s has no previous pad definition" % kicad_package_id)
 
- 
+        pad_dict = {}
     
         for kicad_pad in kicad_mod.pads:
-          pad_attribs =  {}
-          pad_attribs["name"] = str(kicad_pad["number"])
+          name = str(kicad_pad["number"])
 
           pos_x = float(kicad_pad["pos"]["x"])
           pos_y = float(kicad_pad["pos"]["y"])
@@ -150,18 +180,33 @@ class OpenPnPPackagesXML():
             pos_x = -pos_x
           if invert_ypos:
             pos_y = -pos_y
+
+          width = float(kicad_pad["size"]["x"])
+          height = float(kicad_pad["size"]["y"])
+          rotation = float(kicad_pad["pos"]["orientation"])
+
+          pad = OpenPnPPad(pos_x, pos_y, width, height, rotation)
+          
+          if name in pad_dict.keys():
+            pad_dict[name].merge(pad)
+          else:
+            pad_dict[name] = pad
             
-          pad_attribs["x"] = str(pos_x)
-          pad_attribs["y"] = str(pos_y)
-          pad_attribs["width"] = str(kicad_pad["size"]["x"])
-          pad_attribs["height"] = str(kicad_pad["size"]["y"])
-          pad_attribs["rotation"] = str(kicad_pad["pos"]["orientation"])
+        for pad_name in pad_dict.keys():
+          pad_attribs =  {}
+          pad = pad_dict[pad_name]
+          pad_attribs["name"] = pad_name
+          pad_attribs["x"] = str(pad.x)
+          pad_attribs["y"] = str(pad.y)
+          pad_attribs["width"] = str(pad.width)
+          pad_attribs["height"] = str(pad.height)
+          pad_attribs["rotation"] = str(pad.rotation)
           pad_attribs["roundness"] = str(0.0)
           pad_element = etree.SubElement(footprint_element, "pad", pad_attribs)
           
-          if pad_attribs["name"] in marked_pin_names:
+          if pad_name in marked_pin_names:
             pin1_mark_attribs =  dict(pad_attribs)
-            pin1_mark_attribs["name"] == "0"
+            pin1_mark_attribs["name"] == pad_name + "_mark"
             pin1_mark_attribs["width"] = str(float(pin1_mark_attribs["width"])*0.5)
             pin1_mark_attribs["height"] = str(float(pin1_mark_attribs["height"])*0.5)
             pad_element = etree.SubElement(footprint_element, "pad", pin1_mark_attribs)

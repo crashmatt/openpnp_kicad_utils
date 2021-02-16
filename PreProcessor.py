@@ -52,7 +52,8 @@ class PreprocessorApp:
                                ["overwrite_part_height", False],
                                ["ask_overwrite_part_height", True],
                                ["kifoot2opnp_backup", True],
-                               ["backup_parts_file", True]]
+                               ["backup_parts_file", True],
+                               ["ki2opnp_merge_pads", True]]
         
         
         self.project_items = { "mod_filepath": "*.kicad_mod" }
@@ -370,6 +371,7 @@ class PreprocessorApp:
         invert_ypos = self.get_project_setting('kifoot2opnp_yinv')
         backup = self.get_project_setting('kifoot2opnp_backup')
         overwrite = self.get_project_setting('kifoot2opnp_overwrite')
+        merge_pads = self.get_project_setting('ki2opnp_merge_pads')
                 
         marked_pins = self.get_project_setting('marked_pins')
         marked_pin_names = marked_pins.split(",")
@@ -383,7 +385,8 @@ class PreprocessorApp:
                                       invert_ypos=invert_ypos ,
                                       overwrite = overwrite,
                                       package_alias=package_aliases,
-                                      marked_pin_names=marked_pin_names)
+                                      marked_pin_names=marked_pin_names,
+                                      merge_pad_ids=merge_pads)
 
         packages.exportPackages()
 

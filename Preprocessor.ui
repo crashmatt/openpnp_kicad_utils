@@ -383,6 +383,18 @@
                 </layout>
               </object>
             </child>
+            <child>
+              <object class="tk.Checkbutton" id="checkbutton_merge_pads">
+                <property name="idtocommand">false</property>
+                <property name="text" translatable="yes">merge pad ids</property>
+                <property name="variable">boolean:ki2opnp_merge_pads</property>
+                <layout manager="grid">
+                  <property name="column">5</property>
+                  <property name="propagate">True</property>
+                  <property name="row">1</property>
+                </layout>
+              </object>
+            </child>
           </object>
         </child>
         <child>
