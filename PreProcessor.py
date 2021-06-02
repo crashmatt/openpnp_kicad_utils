@@ -1,4 +1,5 @@
 import os
+import sys
 import pygubu
 import tkinter.filedialog as filedialog
 import tkinter.messagebox as messagebox
@@ -13,7 +14,15 @@ import Bom
 from OpenPnPPackages import *
 from OpenPnPParts import *
 
-from pcb.kicad_mod import KicadMod
+print("sys.path[0]", sys.path[0])
+
+# Path to kicad-library-utils directory
+kicad_lib_dir = os.path.abspath(os.path.join(sys.path[0], 'kicad-library-utils'))
+
+if not kicad_lib_dir in sys.path:
+    sys.path.append(kicad_lib_dir)
+
+#from pcb.kicad_mod import KicadMod
 
 
 PROJECT_PATH = os.path.dirname(__file__)
