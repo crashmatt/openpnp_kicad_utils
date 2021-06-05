@@ -46,6 +46,8 @@ class PreprocessorApp:
                                ["part_alias_filepath", "part_alias.csv" ],
                                ["flip_bottom", True],
                                ["reverse_bottom", True],
+                               ["mirror_bottom_x", False],
+                               ["mirror_bottom_y", False],
                                ["auto_outfile_name", True],
                                ["part_alias", False],
                                ["openpnp_parts_filepath", OpenPnPParts.parts_filepath_default ],
@@ -295,6 +297,8 @@ class PreprocessorApp:
           
         flip_bottom = self.get_project_setting('flip_bottom', is_path=False)
         reverse_bottom = self.get_project_setting('reverse_bottom', is_path=False)
+        mirror_bottom_x = self.get_project_setting('mirror_bottom_x', is_path=False)
+        mirror_bottom_y = self.get_project_setting('mirror_bottom_y', is_path=False)
         part_alias = self.get_project_setting('part_alias', is_path=False)
 
         part_aliases = None
@@ -324,7 +328,7 @@ class PreprocessorApp:
 #             if not bom.loadCSV(bom_filepath):
 #               bom = None
         
-        part_positions.process(part_aliases, package_aliases, flip_bottom, reverse_bottom, new_pos_file_path)
+        part_positions.process(part_aliases, package_aliases, flip_bottom, reverse_bottom, mirror_bottom_x, mirror_bottom_y, new_pos_file_path)
         
     def load_project_bom(self):
         bom = Bom()

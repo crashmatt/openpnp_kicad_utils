@@ -154,7 +154,7 @@
               <object class="tk.Checkbutton" id="checkbutton_flip_bottom">
                 <property name="idtocommand">false</property>
                 <property name="indicatoron">true</property>
-                <property name="text" translatable="yes">Flip bottom</property>
+                <property name="text" translatable="yes">Flip bottom to top</property>
                 <property name="variable">boolean:flip_bottom</property>
                 <layout manager="grid">
                   <property name="column">1</property>
@@ -167,7 +167,7 @@
               <object class="tk.Checkbutton" id="checkbutton_reverse_bottom">
                 <property name="idtocommand">false</property>
                 <property name="indicatoron">true</property>
-                <property name="text" translatable="yes">Reverse bottom</property>
+                <property name="text" translatable="yes">Reverse bottom rotation</property>
                 <property name="variable">boolean:reverse_bottom</property>
                 <layout manager="grid">
                   <property name="padx">50</property>
@@ -175,6 +175,34 @@
                   <property name="propagate">True</property>
                   <property name="row">2</property>
                   <property name="sticky">w</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="tk.Checkbutton" id="checkbutton_mirror_bottom_x">
+                <property name="idtocommand">false</property>
+                <property name="indicatoron">true</property>
+                <property name="text" translatable="yes">Mirror bottom x</property>
+                <property name="variable">boolean:mirror_bottom_x</property>
+                <bind sequence="&lt;1&gt;" handler="" add="" />
+                <layout manager="grid">
+                  <property name="column">2</property>
+                  <property name="propagate">True</property>
+                  <property name="row">2</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="tk.Checkbutton" id="checkbutton_mirror_bottom_y">
+                <property name="idtocommand">false</property>
+                <property name="indicatoron">true</property>
+                <property name="text" translatable="yes">Mirror bottom y</property>
+                <property name="variable">boolean:mirror_bottom_y</property>
+                <bind sequence="&lt;1&gt;" handler="" add="" />
+                <layout manager="grid">
+                  <property name="column">2</property>
+                  <property name="propagate">True</property>
+                  <property name="row">1</property>
                 </layout>
               </object>
             </child>

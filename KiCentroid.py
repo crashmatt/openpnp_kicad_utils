@@ -80,12 +80,15 @@ class KiCentroid(object):
 #        part_pos["PosX"] = str(-float(part_pos["PosX"]))
         part_pos["Side"] = "top"
 
+  def mirrorBottomYpos(self):
+    for part_pos in self.part_positions:
+      if part_pos["Side"] == "bottom":
+        part_pos["PosY"] = str(-float(part_pos["PosY"]))
+
   def mirrorBottomXpos(self):
     for part_pos in self.part_positions:
       if part_pos["Side"] == "bottom":
         part_pos["PosX"] = str(-float(part_pos["PosX"]))
- #        part_pos["PosX"] = str(-float(part_pos["PosX"]))
-#         part_pos["Side"] = "top"
 
   def reverseBottomRotation(self):
     for part_pos in self.part_positions:
@@ -140,15 +143,19 @@ class KiCentroid(object):
     new_pos_file_path = new_pos_file_path.with_name(new_pos_file_path_name)   
     return new_pos_file_path 
 
-  def process(self, part_aliases, package_aliases, flip_bottom, reverse_bottom, out_filepath):
+  def process(self, part_aliases, package_aliases, flip_bottom, reverse_bottom, mirror_bottom_x, mirror_bottom_y, out_filepath):
     self.setPackagesToAliases(package_aliases)
     
     self.removeByValue("DNF")
     
     if flip_bottom:
       self.flipBottomToTop()
-    else:
+
+    if mirror_bottom_x:
       self.mirrorBottomXpos()
+
+    if mirror_bottom_y:
+      self.mirrorBottomYpos()
       
     if reverse_bottom:
       self.reverseBottomRotation()
