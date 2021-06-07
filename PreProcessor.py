@@ -16,13 +16,33 @@ from OpenPnPParts import *
 
 print("sys.path[0]", sys.path[0])
 
+print("os.getcwd()", os.getcwd())
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+print("dir_path", dir_path)
+
 # Path to kicad-library-utils directory
-kicad_lib_dir = os.path.abspath(os.path.join(sys.path[0], 'kicad-library-utils'))
+kicad_lib_dir = os.path.abspath(os.path.join(dir_path, 'kicad-library-utils'))
 
 if not kicad_lib_dir in sys.path:
     sys.path.append(kicad_lib_dir)
 
+# Path to kicad-library-utils directory
+kicad_pcb_dir = os.path.abspath(os.path.join(dir_path, 'kicad-library-utils', 'pcb'))
+ 
+if not kicad_pcb_dir in sys.path:
+    sys.path.append(kicad_pcb_dir)
+
+# Path to kicad-library-utils directory
+kicad_common_dir = os.path.abspath(os.path.join(dir_path, 'kicad-library-utils', 'common'))
+
+if not kicad_common_dir in sys.path:
+    sys.path.append(kicad_common_dir)
+
+    
 #from pcb.kicad_mod import KicadMod
+#KicadMod = __import__('pcb.kicad_mod.KicadMod')
+#from kicad_library_utils.pcb.kicad_mod import KicadMod
 
 
 PROJECT_PATH = os.path.dirname(__file__)
@@ -288,11 +308,11 @@ class PreprocessorApp:
         centroid_filepath = self.get_project_setting('centroid_filepath', is_path=True)
 
         if "openpnp" in str(centroid_filepath):
-            messagebox("ERROR: attempting to use an output file as input")
+            messagebox.showerror(message="ERROR: attempting to use an output file as input")
             return
           
         if "alias" in str(centroid_filepath):
-            messagebox("ERROR: attempting to use alias file as input")
+            messagebox.showerror(message="ERROR: attempting to use alias file as input")
             return         
           
         flip_bottom = self.get_project_setting('flip_bottom', is_path=False)
@@ -365,6 +385,17 @@ class PreprocessorApp:
 
 
     def callback_kifoot2openpnp(self, event=None):
+        try:
+          import pcb.kicad_mod as kicad_mod
+#           from importlib import import_module
+#           kicad_mod = import_module('pcb.kicad_mod')
+        except ImportError as e:
+          print(e)
+          messagebox.showwarning(message="Failed to import kicad_mod: os.getcwd()=" + os.getcwd())
+          messagebox.showerror(message=e)
+          return
+        
+        
         mod_file_path = self.project_items["mod_filepath"]
         mod_file_path = self.make_project_abs_path(mod_file_path)
 
@@ -392,15 +423,16 @@ class PreprocessorApp:
         for kicadmod_file_path in mod_file_paths: 
             rel_mod_file_path = self.project_relative_path(mod_file_path)    
             
-            kicadmod = KicadMod(kicadmod_file_path)
-            packages.insertKiCadModPads(kicadmod, 
+            kicadmod = kicad_mod.KicadMod(kicadmod_file_path)
+            if (not packages.insertKiCadModPads(kicadmod, 
                                       invert_xpos=invert_xpos ,
                                       invert_ypos=invert_ypos ,
                                       overwrite = overwrite,
                                       package_alias=package_aliases,
                                       marked_pin_names=marked_pin_names,
-                                      merge_pad_ids=merge_pads)
-
+                                      merge_pad_ids=merge_pads)):
+              messagebox.showerror("Failed to import package from:" + kicadmod_file_path)
+              
         packages.exportPackages()
 
         #Remember the first selection as the default in the project
@@ -441,7 +473,7 @@ class PreprocessorApp:
         return self.PART_HEIGHT_KEEP
     
 
-    def show_parts(self):              
+    def show_parts(self):
         self.update_parts()
         
         overwrite_part_height = self.get_project_setting('overwrite_part_height', is_path=False)
@@ -482,7 +514,7 @@ class PreprocessorApp:
             overwrite_type = self.get_part_height_overwrite(bom_item_height, opnp_part_height, overwrite_part_height)
             if overwrite_type == self.PART_HEIGHT_NOT_IN_BOM:
                 new_height = ""
-                action = "Missing"              
+                action = "Missing"
             if overwrite_type == self.PART_HEIGHT_KEEP:
                 new_height = ""
                 action = "Keep"
