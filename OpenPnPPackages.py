@@ -140,9 +140,14 @@ class OpenPnPPackagesXML():
                          invert_ypos=False, 
                          invert_xpos=False, 
                          marked_pin_names=[],
-                         merge_pad_ids = True):
+                         merge_pad_ids = True,
+                         remove_colon_delimited = True):
     
     kicad_package_id = kicad_mod.name
+    
+    if remove_colon_delimited:
+      kicad_package_id = kicad_package_id.split(":")[-1]
+    
     if package_alias:
       if kicad_package_id in package_alias:
         kicad_package_id = package_alias[kicad_package_id]
